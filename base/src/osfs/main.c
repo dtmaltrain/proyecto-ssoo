@@ -9,4 +9,9 @@ int main(int argc, char **argv)
   printf("%s\n", filename);
   populate_mbt(filename);
   printf("Goodbye P1!\n");
+  os_mount(filename, 4);
+  //printf("%s\n", current_disk);
+  //printf("%i\n", current_partition);
+  os_mount(filename, 5);
+  //printf("%i\n", current_partition);
 }

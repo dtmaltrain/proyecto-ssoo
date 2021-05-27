@@ -7,7 +7,7 @@ typedef struct mbt {
     unsigned int rel_id;
     int n_entry;
     int entry_size;
-    unsigned int* entries[128];
+    unsigned long long* entries[128];
 } MBT;
 
 
