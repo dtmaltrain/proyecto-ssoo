@@ -4,6 +4,7 @@
 #include <stdlib.h> // malloc, calloc, free, etc.
 #include <stdint.h>
 #include <math.h>
+#include <inttypes.h>
 
 
 // Import the header file of this module
@@ -75,28 +76,53 @@ void get_binary(uint8_t k){
     // printf("bit_validez: ")
 }
 
+void os_create_partition(int id, int size){
+    for (int i = 0; i < 128; i++){  
+        unsigned long long* a = mbt->entries[i];
+        uint32_t* r = (uint32_t*)&a;
+        printf("quehace %i\n", r[1]);
+        printf("%32" PRIx32 "\n", r[1]);
+        printf("%08jx\n", (uintmax_t)r[1]);
+        //printf("unsigned long long: %llu\n", &a);
+        uint8_t* b = (uint8_t*)&a;
+        printf("partición %d\n", b[0]);
+        printf("ruta %i %i %i\n", b[1], b[2], b[3]);
+        printf("size %i %i %i %i\n", b[4], b[5], b[6], b[7]);
+        printf("size %d\n", b[4]+b[5]+b[6]+b[7]);
+        //uint32_t bigvar = (b[4] << 24) + (b[5] << 16) + (b[6] << 8) + b[7];
+        //uint32_t i32 = b[7] | (b[6] << 8) | (b[5] << 16) | (b[4] << 24);
+        //uint32_t x = b[4] | (b[5] << 8) | (b[6] << 16) | (b[7] << 24);
+        //uint32_t t = (b[7]<< 0) | (b[6] << 8) | (b[5] << 16) | (b[4] << 24);
+        //int i = (int)t;
+        //printf("size2 %u\n", t);
+        //printf("%" PRIu32 "\n",t);
+        //printf("ENTERO: %i\n",i);
+
+
+    }
+}
 
 void populate_mbt(char* filename){
     mbt = mbt_init();
     FILE *drive = fopen(filename, "rb");
     fread(&mbt->entries, 8, 128, drive);
     // os_mbt(mbt);
-    unsigned long long* a = mbt->entries[13];
+    //unsigned long long* a = mbt->entries[13];
     //printf("%llu\n", &a);
     //printf("%lu\n", sizeof(a));
     // int bitStatus = (12 >> 0) & 1;
     // printf("The bit is set to %d\n", bitStatus);
-
     //uint8_t b[8];
     //memcpy(b, &a, 8);
     //uint8_t target_byte = b[0];
-    uint8_t* b = (uint8_t*)&a;
-    uint8_t target_byte = b[0];
-    printf("%d\n", target_byte);
-    get_binary(b[0]);
-    os_reset_mbt();
-    os_delete_partition(123);
-    os_mbt();
+    // uint8_t* b = (uint8_t*)&a;
+    // uint8_t target_byte = b[0];
+    // printf("%d\n", target_byte);
+    // get_binary(b[0]);
+    // os_reset_mbt();
+    // os_delete_partition(123);
+    //os_mbt();
+    os_create_partition(1,4);
     //i & (1 << N);
     // int ferz = func(target_byte, 0);
 
@@ -111,6 +137,8 @@ void os_mount(char* diskname, int partition){
     current_disk = diskname;
     current_partition = partition;
 }
+
+
 
 
 
