@@ -13,53 +13,53 @@ char *current_disk;
 int current_partition;
 MBT *mbt;
 
-void os_mbt()
-{
-    for (int i = 0; i < 128; i++)
+// void os_mbt()
+// {
+//     for (int i = 0; i < 128; i++)
 
-        unsigned long long a = mbt->entries[i];
-    uint8_t *b = (uint8_t *)&a;
-    if (b[0] >= 128)
-    {
-        // b[0] -= 128;
-        printf("PARTICION %d ESTA ACTIVA\n", b[0] - 128);
-    }
-}
-}
+//         unsigned long long a = mbt->entries[i];
+//     uint8_t *b = (uint8_t *)&a;
+//     if (b[0] >= 128)
+//     {
+//         // b[0] -= 128;
+//         printf("PARTICION %d ESTA ACTIVA\n", b[0] - 128);
+//     }
+// }
+
 // unsigned char *p = (unsigned char *) &i;
 // *(p+4) = 9;
-void os_reset_mbt()
-{
-    for (int i = 0; i < 128; i++)
-    {
-        unsigned long long a = mbt->entries[i];
-        uint8_t *b = (uint8_t *)&a;
-        if (b[0] >= 128)
-        {
-            b[0] -= 128;
-            unsigned long long z;
-            memcpy(&z, b, 8);
-            mbt->entries[i] = z;
-        }
-    }
-}
+// void os_reset_mbt()
+// {
+//     for (int i = 0; i < 128; i++)
+//     {
+//         unsigned long long a = mbt->entries[i];
+//         uint8_t *b = (uint8_t *)&a;
+//         if (b[0] >= 128)
+//         {
+//             b[0] -= 128;
+//             unsigned long long z;
+//             memcpy(&z, b, 8);
+//             mbt->entries[i] = z;
+//         }
+//     }
+// }
 
-void os_delete_partition(int id)
-{
-    for (int i = 0; i < 128; i++)
-    {
-        unsigned long long a = mbt->entries[i];
-        uint8_t *b = (uint8_t *)&a;
-        if (b[0] == id + 128)
-        {
-            printf("VOY A BORRAR LA %d\n", id);
-            b[0] = id;
-            unsigned long long z;
-            memcpy(&z, b, 8);
-            mbt->entries[i] = z;
-        }
-    }
-}
+// void os_delete_partition(int id)
+// {
+//     for (int i = 0; i < 128; i++)
+//     {
+//         unsigned long long a = mbt->entries[i];
+//         uint8_t *b = (uint8_t *)&a;
+//         if (b[0] == id + 128)
+//         {
+//             printf("VOY A BORRAR LA %d\n", id);
+//             b[0] = id;
+//             unsigned long long z;
+//             memcpy(&z, b, 8);
+//             mbt->entries[i] = z;
+//         }
+//     }
+// }
 
 unsigned int int_to_int(uint8_t k)
 {
@@ -78,20 +78,21 @@ void os_create_partition(int id, int size)
 {
     for (int i = 0; i < 128; i++)
     {
-        unsigned long long a = mbt->entries[i];
+        // unsigned char a = mbt->entries[i];
         // uint32_t *r = (uint32_t *)&a;
         // uint64_t *ds = (uint64_t)&a;
         // printf("quehace %i\n", r[1]);
         // printf("%32" PRIx32 "\n", r[1]);
         // printf("%08jx\n", (uintmax_t)r[1]);
-        printf("unsigned long long: %llu\n", a);
-        uint8_t *b = (uint8_t *)&a;
-        printf("partición %d\n", b[0] >> 1);
-        printf("ruta %i %i %i\n", b[1], b[2], b[3]);
-        printf("ruta %i\n", b[3] + (b[2] << 8) + (b[1] << 16));
+        // printf("unsigned char 1 : %u\n", a);
+        // break;
+        // uint8_t *b = (uint8_t *)&a;
+        // printf("partición %d\n", b[0] >> 1);
         // printf("ruta %i %i %i\n", b[1], b[2], b[3]);
-        // printf("ruta %i\n\n", b[3] + (b[2] << 8) + (b[1] << 16));
-        printf("N_BLOQUES %i %i %i %i\n", b[4], b[5], b[6], b[7]);
+        // printf("ruta %i\n", b[3] + (b[2] << 8) + (b[1] << 16));
+        // // printf("ruta %i %i %i\n", b[1], b[2], b[3]);
+        // // printf("ruta %i\n\n", b[3] + (b[2] << 8) + (b[1] << 16));
+        // printf("N_BLOQUES %i %i %i %i\n", b[4], b[5], b[6], b[7]);
         // break;
         // printf("N_BLOQUES %i\n\n", b[7] + (b[6] << 8) + (b[5] << 16) + (b[4] << 24));
         // printf("size %i\n", b[7] + (b[6] << 8) + (b[5] << 16) + (b[4] << 24));
@@ -121,19 +122,19 @@ void os_create_partition(int id, int size)
     }
 }
 
-void SwapBytes(void *pv, size_t n)
-{
-    assert(n > 0);
+// void SwapBytes(void *pv, size_t n)
+// {
+//     assert(n > 0);
 
-    char *p = pv;
-    size_t lo, hi;
-    for (lo = 0, hi = n - 1; hi > lo; lo++, hi--)
-    {
-        char tmp = p[lo];
-        p[lo] = p[hi];
-        p[hi] = tmp;
-    }
-}
+//     char *p = pv;
+//     size_t lo, hi;
+//     for (lo = 0, hi = n - 1; hi > lo; lo++, hi--)
+//     {
+//         char tmp = p[lo];
+//         p[lo] = p[hi];
+//         p[hi] = tmp;
+//     }
+// }
 
 // https://stackoverflow.com/questions/8556927/why-does-fread-mess-with-my-byte-order
 
@@ -141,8 +142,49 @@ void populate_mbt(char *filename)
 {
     mbt = mbt_init();
     FILE *drive = fopen(filename, "rb");
-    fread(mbt->entries, 8, 128, drive);
 
+    for (int i = 0; i < 128; i++)
+    {
+        unsigned char reader;
+        int valid;
+        int idx_uni = 0;
+        unsigned int idx_abs = 0;
+        unsigned int n_blocks = 0;
+        fread(&reader, sizeof(reader), 1, drive);
+
+        if (reader > 127)
+        {   
+            valid = 1;
+            idx_uni = reader - 128 ;
+        }else{
+            valid = 0;
+            idx_uni = reader;
+        }
+
+        for (int u = 0; u < 3; u++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);
+            idx_abs = idx_abs + (reader << 8*(2-u));
+        }
+
+        for (int u = 0; u < 4; u++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);
+            n_blocks = n_blocks + (reader << 8*(3-u));
+        }
+        // if (valid == 1)
+        // {
+        //     printf("Idx_uni: %i\n", idx_uni);
+        //     printf("Idx_abs: %u\n", idx_abs);
+        //     printf("n_bloques: %u\n", n_blocks);
+        // }
+        
+        
+        add_entry(mbt, valid, idx_uni, idx_abs, n_blocks, i);
+    }
+    show_entry(mbt, 0);
+    show_entry(mbt, 3);
+    // printf("La 0: %i\n", mbt -> entries[0] -> valid);
     fclose(drive);
 
     // os_mbt(mbt);
@@ -161,7 +203,7 @@ void populate_mbt(char *filename)
     // os_reset_mbt();
     // os_delete_partition(123);
     //os_mbt();
-    os_create_partition(1, 4);
+    // os_create_partition(1, 4);
     //i & (1 << N);
     // int ferz = func(target_byte, 0);
 
