@@ -12,6 +12,7 @@
 char *current_disk;
 int current_partition;
 MBT *mbt;
+Directory *direc;
 
 void os_mbt()
 {   
@@ -182,51 +183,6 @@ void os_create_partition(int id, int size)
 
 void os_ls(){
 
-    unsigned int direc_id;
-    for (int i = 0; i < 128; i++)
-    {
-        if (mbt -> entries[i] -> idx_uni == current_partition && mbt -> entries[i] -> valid == 1)
-        {
-            direc_id = mbt -> entries[i] -> idx_abs;
-        }
-    }
-    printf("ID ABS %u\n", direc_id);
-    Directory *direc = directory_init();
-    FILE *drive = fopen(current_disk, "rb");
-    fseek(drive, 128 + direc_id*(2048), SEEK_SET);
-    
-    for (int i = 0; i < 64; i++)
-    {
-        unsigned char reader;
-        int valid;
-        unsigned int idx_rel = 0;
-        char archivo[28];
-        fread(&reader, sizeof(reader), 1, drive);
-        valid = reader;
-        
-
-        for (int u = 0; u < 3; u++)
-        {
-            fread(&reader, sizeof(reader), 1, drive);
-            idx_rel = idx_rel + (reader << 8*(2-u));
-        }
-
-        for (int u = 0; u < 28; u++)
-        {
-            fread(&reader, sizeof(reader), 1, drive);
-            archivo[u] = reader;
-        }
-
-        // if (valid == 1)
-        // {
-        //     printf("%s\n", archivo);
-        // }
-        
-            
-        add_d_entry(direc, valid, idx_rel, archivo, i);
-    }
-    
-    fclose(drive);
 
     for (int i = 0; i < 64; i++)
     {   
@@ -235,21 +191,26 @@ void os_ls(){
             printf("%s\n", direc -> entries[i] -> file_name);
         }
     }
-    direc_destroy(direc);
+    
     
 }
 
 
 int os_exists(char* filename)
 {
-    // for (int i = 0; i < 64; i++)
-    // {   
-    //     if (direc -> entries[i] -> file_name == filename)
-    //     {
-    //         return 1
-    //     }
-    // }
-    // return 0
+    // printf("buscando: %s\n", filename);
+    for (int i = 0; i < 64; i++)
+    {   
+        if (direc -> entries[i] -> valid == 1)
+        {
+            // printf("encontre: %s\n", direc -> entries[i] -> file_name);
+            if (strcmp(direc -> entries[i] -> file_name,  filename) == 0)
+            {
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
 
 // void SwapBytes(void *pv, size_t n)
@@ -313,12 +274,13 @@ void populate_mbt(char *filename)
 
     fclose(drive);
     // fclose(osfile -> disco);
-    os_ls();
+    
     // os_create_partition(2, 23312);
     // os_create_partition(5, 23312);
     // os_mbt();
     
-    mbt_destroy(mbt);
+    
+   
     // osfile_destroy(osfile);
 
 }
@@ -328,6 +290,53 @@ void os_mount(char *diskname, int partition)
     current_disk = diskname;
     current_partition = partition;
     populate_mbt(current_disk);
+
+    unsigned int direc_id;
+    for (int i = 0; i < 128; i++)
+    {
+        if (mbt -> entries[i] -> idx_uni == current_partition && mbt -> entries[i] -> valid == 1)
+        {
+            direc_id = mbt -> entries[i] -> idx_abs;
+        }
+    }
+    printf("ID ABS %u\n", direc_id);
+    direc = directory_init();
+    FILE *drive = fopen(current_disk, "rb");
+    fseek(drive, 128 + direc_id*(2048), SEEK_SET);
+    
+    for (int i = 0; i < 64; i++)
+    {
+        unsigned char reader;
+        int valid;
+        unsigned int idx_rel = 0;
+        char archivo[28];
+        fread(&reader, sizeof(reader), 1, drive);
+        valid = reader;
+        
+
+        for (int u = 0; u < 3; u++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);
+            idx_rel = idx_rel + (reader << 8*(2-u));
+        }
+
+        for (int u = 0; u < 28; u++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);
+            archivo[u] = reader;
+        }
+
+        // if (valid == 1)
+        // {
+        //     printf("%s\n", archivo);
+        // }
+        
+            
+        add_d_entry(direc, valid, idx_rel, archivo, i);
+    }
+    
+    fclose(drive);
+    
 }
 
 // https://stackoverflow.com/questions/14564813/how-to-convert-an-integer-to-a-character-array-using-c

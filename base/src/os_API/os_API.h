@@ -10,6 +10,9 @@
 extern char* current_disk;
 extern int current_partition;
 extern MBT *mbt;
+extern Directory *direc;
 
 void populate_mbt(char* filename);
 void os_mount(char* diskname, int partition);
+int os_exists(char* filename);
+void os_ls();

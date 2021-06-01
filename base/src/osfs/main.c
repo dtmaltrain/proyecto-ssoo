@@ -12,7 +12,18 @@ int main(int argc, char **argv)
   printf("%s\n", filename);
   printf("\nGoodbye P1!\n");
 
+  os_ls();
+
+  int a = os_exists("pepeloni.txt");
+
+  if (a == 1)
+  {
+    printf("SI EXISTE\n");
+  }
   
+
+  direc_destroy(direc);
+  mbt_destroy(mbt);
   //printf("%s\n", current_disk);
   //printf("%i\n", current_partition);
   //printf("%i\n", current_partition);
