@@ -7,24 +7,18 @@ int main(int argc, char **argv)
 
   printf("Hello P1!\n");
   char *filename = argv[1];
-  os_mount(filename, 4);
-  
-  printf("%s\n", filename);
-  printf("\nGoodbye P1!\n");
-
+  os_mount(filename, 2);
   os_ls();
+  // os_rm("nene.txt");
+  // os_ls();
 
-  int a = os_exists("pepeloni.txt");
-
-  if (a == 1)
-  {
-    printf("SI EXISTE\n");
-  }
-  
+  os_mount(filename, 3);
+  os_ls();
 
   direc_destroy(direc);
   mbt_destroy(mbt);
   //printf("%s\n", current_disk);
   //printf("%i\n", current_partition);
   //printf("%i\n", current_partition);
+  printf("\nGoodbye P1!\n");
 }
