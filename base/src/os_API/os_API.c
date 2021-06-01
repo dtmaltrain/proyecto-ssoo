@@ -13,53 +13,90 @@ char *current_disk;
 int current_partition;
 MBT *mbt;
 
-// void os_mbt()
-// {
-//     for (int i = 0; i < 128; i++)
-
-//         unsigned long long a = mbt->entries[i];
-//     uint8_t *b = (uint8_t *)&a;
-//     if (b[0] >= 128)
-//     {
-//         // b[0] -= 128;
-//         printf("PARTICION %d ESTA ACTIVA\n", b[0] - 128);
-//     }
-// }
+void os_mbt()
+{   
+    printf("\nParticiones Validas:\n");
+    for (int i = 0; i < 128; i++)
+    {
+        if (mbt -> entries[i] -> valid == 1)
+        {
+            printf("Particion %i\n", mbt -> entries[i] -> idx_uni);
+        }
+        
+    } 
+}
 
 // unsigned char *p = (unsigned char *) &i;
 // *(p+4) = 9;
-// void os_reset_mbt()
-// {
-//     for (int i = 0; i < 128; i++)
-//     {
-//         unsigned long long a = mbt->entries[i];
-//         uint8_t *b = (uint8_t *)&a;
-//         if (b[0] >= 128)
-//         {
-//             b[0] -= 128;
-//             unsigned long long z;
-//             memcpy(&z, b, 8);
-//             mbt->entries[i] = z;
-//         }
-//     }
-// }
+void os_reset_mbt()
+{
+    for (int i = 0; i < 128; i++)
+    {
+        mbt -> entries[i] -> valid = 0;
+        if (mbt -> entries[i] -> valid == 1)
+        {
+            
+        }
+    }
+}
 
-// void os_delete_partition(int id)
-// {
-//     for (int i = 0; i < 128; i++)
-//     {
-//         unsigned long long a = mbt->entries[i];
-//         uint8_t *b = (uint8_t *)&a;
-//         if (b[0] == id + 128)
-//         {
-//             printf("VOY A BORRAR LA %d\n", id);
-//             b[0] = id;
-//             unsigned long long z;
-//             memcpy(&z, b, 8);
-//             mbt->entries[i] = z;
-//         }
-//     }
-// }
+void os_delete_partition(int id)
+{
+    for (int i = 0; i < 128; i++)
+    {
+        if (mbt -> entries[i] -> idx_uni == id)
+        {
+            mbt -> entries[i] -> valid = 0;
+        }
+        
+    }
+}
+
+void sort_array(Entry** array, int n){
+    Entry* a;
+    for (int i = 0; i < n; ++i) {
+        for (int j = i + 1; j < n; ++j){
+            if (array[i]-> idx_abs > array[j]-> idx_abs){
+                a =  array[i];
+                array[i] = array[j];
+                array[j] = a;
+            }
+        }
+    }
+}
+
+int get_used_space(Entry** occupied)
+{
+    //MBT* valid_mbt = mbt_init()
+    printf("HACEMOS MALLOC\n");
+    //unsigned int occupied_size[128];
+    int n = 0;
+    printf("INICIO FOR DE ENTRIES\n");
+    for (int i = 0; i < 128; i++)
+    {
+        if (mbt -> entries[i] -> valid == 1)
+        {   
+            occupied[i] = mbt -> entries[i]; 
+            n +=1;
+        }
+    }
+    for (int i = 0; i < n; i++)
+    {
+        printf("idx_abs %u\n", occupied[i]-> idx_abs);
+        printf("nblocks %u\n", occupied[i]-> n_blocks);
+    }
+    // funcion de sort
+    printf("ORDENAR ARRAY\n");
+    sort_array(occupied, n);
+    printf("ARREGLO CREADO Y ORDENADO\n");
+    for (int i = 0; i < n; i++)
+    {
+        printf("idx_abs %u\n", occupied[i]-> idx_abs);
+        printf("nblocks %u\n", occupied[i]-> n_blocks);
+    }
+    return n;
+
+}
 
 unsigned int int_to_int(uint8_t k)
 {
@@ -76,50 +113,143 @@ void get_binary(uint8_t k)
 
 void os_create_partition(int id, int size)
 {
+    int aux = 0;
+    int aux2 = 0;
+    int id_nuevo;
     for (int i = 0; i < 128; i++)
     {
-        // unsigned char a = mbt->entries[i];
-        // uint32_t *r = (uint32_t *)&a;
-        // uint64_t *ds = (uint64_t)&a;
-        // printf("quehace %i\n", r[1]);
-        // printf("%32" PRIx32 "\n", r[1]);
-        // printf("%08jx\n", (uintmax_t)r[1]);
-        // printf("unsigned char 1 : %u\n", a);
-        // break;
-        // uint8_t *b = (uint8_t *)&a;
-        // printf("partición %d\n", b[0] >> 1);
-        // printf("ruta %i %i %i\n", b[1], b[2], b[3]);
-        // printf("ruta %i\n", b[3] + (b[2] << 8) + (b[1] << 16));
-        // // printf("ruta %i %i %i\n", b[1], b[2], b[3]);
-        // // printf("ruta %i\n\n", b[3] + (b[2] << 8) + (b[1] << 16));
-        // printf("N_BLOQUES %i %i %i %i\n", b[4], b[5], b[6], b[7]);
-        // break;
-        // printf("N_BLOQUES %i\n\n", b[7] + (b[6] << 8) + (b[5] << 16) + (b[4] << 24));
-        // printf("size %i\n", b[7] + (b[6] << 8) + (b[5] << 16) + (b[4] << 24));
-        // printf("size2 %i\n", (b[7] >> 24) + (b[6] >> 16) + (b[5] >> 8) + b[4]);
-        // unsigned int num = 2130706432;
-        // unsigned int x;
-        // unsigned char u[4];
-
-        // u[3] = (num >> 24) & 0xFF;
-        // u[2] = (num >> 16) & 0xFF;
-        // u[1] = (num >> 8) & 0xFF;
-        // u[0] = num & 0xFF;
-
-        // x = *(int *)u;
-        // printf("%d\n", x);
-
-        // printf("todo %llu\n", *a);
-        // printf("todo2 %i\n", ds);
-        //uint32_t bigvar = (b[4] << 24) + (b[5] << 16) + (b[6] << 8) + b[7];
-        //uint32_t i32 = b[7] | (b[6] << 8) | (b[5] << 16) | (b[4] << 24);
-        //uint32_t x = b[4] | (b[5] << 8) | (b[6] << 16) | (b[7] << 24);
-        //uint32_t t = (b[7]<< 0) | (b[6] << 8) | (b[5] << 16) | (b[4] << 24);
-        //int i = (int)t;
-        //printf("size2 %u\n", t);
-        //printf("%" PRIu32 "\n",t);
-        //printf("ENTERO: %i\n",i);
+        if (mbt -> entries[i] -> idx_uni == id)
+        {
+            if(mbt -> entries[i] -> valid == 1)
+            {
+                printf("NO SE PUEDE CREAR LA PARTICION %i\n", id); 
+                aux = 1;               
+            }
+            
+        }
+        if (mbt -> entries[i] -> valid == 0 && aux2 == 0)
+        {
+            id_nuevo = i;
+            aux2 = 1;
+        }
+        
     }
+    if (aux == 0)
+    {
+        
+        mbt -> entries[id_nuevo] -> valid = 1;
+        mbt -> entries[id_nuevo] -> idx_uni = id;
+        mbt -> entries[id_nuevo] -> n_blocks = size;
+        printf("SE PUEDE CREAR LA PARTICION %i\n", id);
+        Entry* valid_entries[128];
+        int n = get_used_space(valid_entries);
+        int space = 0;
+        int i = 0;
+        int pos_ini = 0;
+        int pos_fin = 0;
+        while(size > space){
+            if (i == 0){
+                pos_ini = 0;
+                pos_fin = valid_entries[i] -> idx_abs;
+                space = pos_fin - pos_ini;
+            }
+            else if (i < n){
+                pos_ini = valid_entries[i-1] -> idx_abs + valid_entries[i-1] -> n_blocks + 1;
+                pos_fin = valid_entries[i] -> idx_abs;
+                space = pos_fin - pos_ini;
+                printf("i: %i\n", i);
+                printf("pos_ini_loop: %i\n", pos_ini);
+                printf("pos_fin_loop: %i\n", pos_fin);
+                printf("space_loop: %i\n", space);
+            }
+             else if(i == n){
+                pos_ini = valid_entries[i-1] -> idx_abs + valid_entries[i-1] -> n_blocks + 1;
+                pos_fin = 2097152;
+                space = pos_fin - pos_ini;
+            }
+            else{
+                break;
+            }
+            i +=1;
+        }
+        printf("pos_ini: %i\n", pos_ini);
+        printf("space: %i\n", space);
+        printf("size: %i\n", size);
+        mbt -> entries[id_nuevo] -> n_blocks = space;
+        //codigo para crear   
+    }
+}
+
+void os_ls(){
+
+    unsigned int direc_id;
+    for (int i = 0; i < 128; i++)
+    {
+        if (mbt -> entries[i] -> idx_uni == current_partition && mbt -> entries[i] -> valid == 1)
+        {
+            direc_id = mbt -> entries[i] -> idx_abs;
+        }
+    }
+    printf("ID ABS %u\n", direc_id);
+    Directory *direc = directory_init();
+    FILE *drive = fopen(current_disk, "rb");
+    fseek(drive, 128 + direc_id*(2048), SEEK_SET);
+    
+    for (int i = 0; i < 64; i++)
+    {
+        unsigned char reader;
+        int valid;
+        unsigned int idx_rel = 0;
+        char archivo[28];
+        fread(&reader, sizeof(reader), 1, drive);
+        valid = reader;
+        
+
+        for (int u = 0; u < 3; u++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);
+            idx_rel = idx_rel + (reader << 8*(2-u));
+        }
+
+        for (int u = 0; u < 28; u++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);
+            archivo[u] = reader;
+        }
+
+        // if (valid == 1)
+        // {
+        //     printf("%s\n", archivo);
+        // }
+        
+            
+        add_d_entry(direc, valid, idx_rel, archivo, i);
+    }
+    
+    fclose(drive);
+
+    for (int i = 0; i < 64; i++)
+    {   
+        if (direc -> entries[i] -> valid == 1)
+        {
+            printf("%s\n", direc -> entries[i] -> file_name);
+        }
+    }
+    direc_destroy(direc);
+    
+}
+
+
+int os_exists(char* filename)
+{
+    // for (int i = 0; i < 64; i++)
+    // {   
+    //     if (direc -> entries[i] -> file_name == filename)
+    //     {
+    //         return 1
+    //     }
+    // }
+    // return 0
 }
 
 // void SwapBytes(void *pv, size_t n)
@@ -141,6 +271,8 @@ void os_create_partition(int id, int size)
 void populate_mbt(char *filename)
 {
     mbt = mbt_init();
+    // osFILE* osfile = os_open(filename, "r");
+    // osfile -> disco;
     FILE *drive = fopen(filename, "rb");
 
     for (int i = 0; i < 128; i++)
@@ -151,6 +283,7 @@ void populate_mbt(char *filename)
         unsigned int idx_abs = 0;
         unsigned int n_blocks = 0;
         fread(&reader, sizeof(reader), 1, drive);
+        // fread(&reader, sizeof(reader), 1, osfile -> disco);
 
         if (reader > 127)
         {   
@@ -164,56 +297,37 @@ void populate_mbt(char *filename)
         for (int u = 0; u < 3; u++)
         {
             fread(&reader, sizeof(reader), 1, drive);
+            // fread(&reader, sizeof(reader), 1, osfile -> disco);
             idx_abs = idx_abs + (reader << 8*(2-u));
         }
 
         for (int u = 0; u < 4; u++)
         {
             fread(&reader, sizeof(reader), 1, drive);
+            // fread(&reader, sizeof(reader), 1, osfile -> disco);
             n_blocks = n_blocks + (reader << 8*(3-u));
         }
-        // if (valid == 1)
-        // {
-        //     printf("Idx_uni: %i\n", idx_uni);
-        //     printf("Idx_abs: %u\n", idx_abs);
-        //     printf("n_bloques: %u\n", n_blocks);
-        // }
-        
         
         add_entry(mbt, valid, idx_uni, idx_abs, n_blocks, i);
     }
-    show_entry(mbt, 0);
-    show_entry(mbt, 3);
-    // printf("La 0: %i\n", mbt -> entries[0] -> valid);
+
     fclose(drive);
-
-    // os_mbt(mbt);
-    //unsigned long long* a = mbt->entries[13];
-    //printf("%llu\n", &a);
-    //printf("%lu\n", sizeof(a));
-    // int bitStatus = (12 >> 0) & 1;
-    // printf("The bit is set to %d\n", bitStatus);
-    //uint8_t b[8];
-    //memcpy(b, &a, 8);
-    //uint8_t target_byte = b[0];
-    // uint8_t* b = (uint8_t*)&a;
-    // uint8_t target_byte = b[0];
-    // printf("%d\n", target_byte);
-    // get_binary(b[0]);
-    // os_reset_mbt();
-    // os_delete_partition(123);
-    //os_mbt();
-    // os_create_partition(1, 4);
-    //i & (1 << N);
-    // int ferz = func(target_byte, 0);
-
+    // fclose(osfile -> disco);
+    os_ls();
+    // os_create_partition(2, 23312);
+    // os_create_partition(5, 23312);
+    // os_mbt();
+    
     mbt_destroy(mbt);
+    // osfile_destroy(osfile);
+
 }
 
 void os_mount(char *diskname, int partition)
 {
     current_disk = diskname;
     current_partition = partition;
+    populate_mbt(current_disk);
 }
 
 // https://stackoverflow.com/questions/14564813/how-to-convert-an-integer-to-a-character-array-using-c
@@ -229,5 +343,7 @@ char *toArray(int number)
     }
     return numberArray;
 }
+
+
 
 // https://stackoverflow.com/questions/5488377/converting-an-integer-to-binary-in-c
