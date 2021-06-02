@@ -6,3 +6,5 @@ typedef struct bitmap_block {
     unsigned int rel_id;
     char type;
 } Bitmap_Block;
+
+// void os_bitmap

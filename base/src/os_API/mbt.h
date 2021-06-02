@@ -22,3 +22,4 @@ void add_entry(MBT *mbt, int valid, int idx_uni, unsigned int idx_abs, unsigned 
 void show_entry(MBT *mbt, int pos);
 MBT *mbt_init();
 void mbt_destroy(MBT *mbt);
+void mbt_update_in_drive(char* filename, MBT *mbt);

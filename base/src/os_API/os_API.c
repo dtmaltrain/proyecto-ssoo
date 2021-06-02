@@ -14,17 +14,18 @@ int current_partition;
 MBT *mbt;
 Directory *direc;
 int auxi = 0;
+IndexBlock* indexes[64];
+
 
 void os_mbt()
 {   
     printf("\nParticiones Validas:\n");
-    for (int i = 0; i < 128; i++)
+    for (int i = 0; i < 128; i++) // entradas
     {
-        if (mbt -> entries[i] -> valid == 1)
+        if (mbt -> entries[i] -> valid == 1) // check bit validez
         {
             printf("Particion %i\n", mbt -> entries[i] -> idx_uni);
         }
-        
     } 
 }
 
@@ -37,7 +38,7 @@ void os_reset_mbt()
         mbt -> entries[i] -> valid = 0;
         if (mbt -> entries[i] -> valid == 1)
         {
-            
+            printf("No se reseteó la entrada %d\n", i);
         }
     }
 }
@@ -98,19 +99,6 @@ int get_used_space(Entry** occupied)
     }
     return n;
 
-}
-
-unsigned int int_to_int(uint8_t k)
-{
-    return (k == 0 || k == 1 ? k : ((k % 2) + 10 * int_to_int(k / 2)));
-}
-
-void get_binary(uint8_t k)
-{
-    //char string[8];
-    //sprintf(string, "%08d", int_to_int(k));
-    //printf("%08d CORNETAAAAAAA\n", int_to_int(k));
-    // printf("bit_validez: ")
 }
 
 void os_create_partition(int id, int size)
@@ -234,21 +222,6 @@ int os_rm(char* filename)
 }
 
 
-
-// void SwapBytes(void *pv, size_t n)
-// {
-//     assert(n > 0);
-
-//     char *p = pv;
-//     size_t lo, hi;
-//     for (lo = 0, hi = n - 1; hi > lo; lo++, hi--)
-//     {
-//         char tmp = p[lo];
-//         p[lo] = p[hi];
-//         p[hi] = tmp;
-//     }
-// }
-
 // https://stackoverflow.com/questions/8556927/why-does-fread-mess-with-my-byte-order
 
 void populate_mbt(char *filename)
@@ -290,7 +263,7 @@ void populate_mbt(char *filename)
             // fread(&reader, sizeof(reader), 1, osfile -> disco);
             n_blocks = n_blocks + (reader << 8*(3-u));
         }
-        
+
         add_entry(mbt, valid, idx_uni, idx_abs, n_blocks, i);
     }
 
@@ -311,14 +284,24 @@ void os_mount(char *diskname, int partition)
 {
     if (auxi == 1)
     {
+        if (strcmp(current_disk, diskname) != 0)
+        {
+            auxi = 2;
+            mbt_destroy(mbt);
+        }
         direc_destroy(direc);
-        mbt_destroy(mbt);
     }
     
-    auxi = 1;
+    
     current_disk = diskname;
     current_partition = partition;
-    populate_mbt(current_disk);
+    
+    if (auxi != 2)
+    {
+        populate_mbt(current_disk);
+    }
+    auxi = 1;
+    
 
     unsigned int direc_id;
     for (int i = 0; i < 128; i++)
@@ -331,21 +314,27 @@ void os_mount(char *diskname, int partition)
     // printf("ID ABS %u\n", direc_id);
     direc = directory_init();
     FILE *drive = fopen(current_disk, "rb");
-    fseek(drive, 128 + direc_id*(2048), SEEK_SET);
+    // printf("Busco en el byte: %u\n\n", 128 + direc_id*2048);
+    // printf("el primer seek %d\n", 128*8 + direc_id*(2048));
+    fseek(drive, 128*8 + direc_id*(2048), SEEK_SET);
+    // printf("EL QUE FUNCIONA: the file indicator position is: %ld\n",ftell(drive));
+    // printf("FSEEK 1: %i\n",fseek(drive, 128 + direc_id*(2048) , SEEK_SET));
+    unsigned char reader;
     
     for (int i = 0; i < 64; i++)
     {
-        unsigned char reader;
         int valid;
         unsigned int idx_rel = 0;
         char archivo[28];
         fread(&reader, sizeof(reader), 1, drive);
         valid = reader;
+        // printf("valid: %i\n", valid);
         
 
         for (int u = 0; u < 3; u++)
         {
             fread(&reader, sizeof(reader), 1, drive);
+            // printf("byte: %i\n", reader);
             idx_rel = idx_rel + (reader << 8*(2-u));
         }
 
@@ -354,34 +343,141 @@ void os_mount(char *diskname, int partition)
             fread(&reader, sizeof(reader), 1, drive);
             archivo[u] = reader;
         }
-
-        // if (valid == 1)
-        // {
-        //     printf("%s\n", archivo);
-        // }
+        
         
             
         add_d_entry(direc, valid, idx_rel, archivo, i);
     }
-    
-    fclose(drive);
-    
-}
-
-// https://stackoverflow.com/questions/14564813/how-to-convert-an-integer-to-a-character-array-using-c
-
-char *toArray(int number)
-{
-    int n = log10(number) + 1;
-    int i;
-    char *numberArray = calloc(n, sizeof(char));
-    for (i = n - 1; i >= 0; --i, number /= 10)
+    // fclose(drive);
+    for (int i = 0; i < 64; i++)
     {
-        numberArray[i] = (number % 10) + '0';
+        
+        unsigned long int pos_idx = direc -> entries[i] -> rel_id;
+        unsigned int n_bloques = 0;
+        unsigned long int pos_idxx = 128*8 + (direc_id)*2048 + pos_idx*2048;
+        
+        fseek(drive, pos_idxx, SEEK_SET);
+    
+        for (int b = 0; b < 5; b++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);   
+            n_bloques = n_bloques + (reader << 8*(4-b));
+        }
+        // printf("Tamaño de archivo %s: %u Bloques\n", direc ->entries[i] ->file_name, n_bloques);
+        IndexBlock *ind = index_init(n_bloques, pos_idx);
+
+        for (int u = 0; u < 681; u++)
+        {
+            unsigned int pointer = 0;
+            for (int a = 0; a < 3; a++)
+            {
+                fread(&reader, sizeof(reader), 1, drive);
+                pointer = pointer + (reader << 8*(2-a));
+            }
+            add_pointer(ind, pointer, u);
+
+            
+        }
+        add_index(direc, ind, i);
+            
     }
-    return numberArray;
+    fclose(drive);
 }
 
+void os_bitmap(unsigned num){
+    
+    unsigned int direc_id;
+    unsigned int n_blocks;
+    for (int i = 0; i < 128; i++)
+    {
+        if (mbt -> entries[i] -> idx_uni == current_partition && mbt -> entries[i] -> valid == 1)
+        {
+            direc_id = mbt -> entries[i] -> idx_abs;
+            n_blocks = mbt -> entries[i] -> n_blocks;
+        }
+    }
+    printf("n bloques %i\n", n_blocks);
+    double div = (n_blocks + 0.0)/16384;
+    // printf("%f\n", div);
+    int n_bloques_bitmap = ceil(div);
+    // printf("n blo %d\n", n_bloques_bitmap);
+    FILE *drive = fopen(current_disk, "rb");
+    unsigned char reader;
+    int full = 0;
+    int empty = 0;
+    if (num != 0){
+        fseek(drive, 128*8 + direc_id*(2048) + num*2048, SEEK_SET);
+        int iter = 2048;
+        if (num == n_bloques_bitmap)
+        {
+            iter = (n_blocks - (num - 1)*16384)/8;
+            printf("ITER %d\n", iter);
+        }
+        
+        for (int i = 0; i < iter; i++)
+        {
+            fread(&reader, sizeof(reader), 1, drive);
+            // printf("\nbyte: %d \n", reader);
+            unsigned int bytete = reader;
+            for (int j = 0; j < 8; j++)
+            {
+                if (bytete > pow(2, 7-j) - 1)
+                {
+                    bytete = bytete - pow(2, 7-j);
+                    fprintf(stderr, "1");
+                    // printf("1");
+                    full++;
+                }else{
+                    fprintf(stderr, "0");
+                    empty++;
+                }
+                
+                // printf("%u\n", reader  (7-j));
+            }
+            
+        }    
+        
+        // fprintf( stderr, "my %s has %d chars\n", "string format", 30);    
+    }
+    else{
+        fseek(drive, 128*8 + direc_id*(2048) + 2048, SEEK_SET);
+        int iter = n_blocks/8;
+        printf("ITER %i\n", iter);
+        for (int i = 0; i < iter ; i++){
+            fread(&reader, sizeof(reader), 1, drive);
+            // printf("\nbyte: %d \n", reader);
+            unsigned int bytete = reader;
+            for (int j = 0; j < 8; j++){
+            {
+                if (bytete > pow(2, 7-j) - 1)
+                {
+                    bytete = bytete - pow(2, 7-j);
+                    fprintf(stderr, "1");
+                    // printf("1");
+                    full++;
+                }else{
+                    fprintf(stderr, "0");
+                    empty++;
+                }
+                
+                // printf("%u\n", reader  (7-j));
+            }
+        }
+    
+    
+    }
+    }
+    printf("\nCantidad de bloques ocupados %i\n", full);
+    printf("\nCantidad de bloques libres %i\n", empty);
+    fclose(drive);
+
+}
+
+//char string[8];
+    //sprintf(string, "%08d", int_to_int(k));
+    //printf("%08d CORNETAAAAAAA\n", int_to_int(k));
+    // printf("bit_validez: ")
 
 
-// https://stackoverflow.com/questions/5488377/converting-an-integer-to-binary-in-c
+
+

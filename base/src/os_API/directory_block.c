@@ -1,5 +1,6 @@
 // Import the header file of this module
 #include "directory_block.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -30,6 +31,12 @@ void add_d_entry(Directory *direc, int valid, unsigned int rel_id, char* file_na
 
 }
 
+void add_index(Directory *direc, IndexBlock *ind, int pos)
+{
+  direc -> indexes[pos] = ind;
+
+}
+
 void d_entry_destroy(DirectoryEntry *entry)
 {
   free(entry);
@@ -40,6 +47,7 @@ void direc_destroy(Directory *direc)
   for (int i = 0; i < 64; i++)
   {
     d_entry_destroy(direc -> entries[i]);
+    index_destroy(direc -> indexes[i]);
   }
   
   free(direc);
