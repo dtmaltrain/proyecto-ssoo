@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   mbt_destroy(mbt);
   //char b = 'r';
   //osFILE* ola = os_open(filename, b);
-
+  os_strerror(OS_ERROR);
   //printf("%s\n", current_disk);
   //printf("%i\n", current_partition);
   //printf("%i\n", current_partition);

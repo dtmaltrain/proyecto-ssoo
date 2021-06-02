@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include <math.h>
 #include <inttypes.h>
-
 // Import the header file of this module
 #include "os_API.h"
 
+int mounted = 0;
 char *current_disk;
 int current_partition;
 MBT *mbt;
@@ -19,6 +19,11 @@ IndexBlock* indexes[64];
 
 void os_mbt()
 {   
+    if (mounted == 0)
+    {
+        OS_ERROR = DiskNotMounted;
+    }
+    
     printf("\nParticiones Validas:\n");
     for (int i = 0; i < 128; i++) // entradas
     {
@@ -26,7 +31,7 @@ void os_mbt()
         {
             printf("Particion %i\n", mbt -> entries[i] -> idx_uni);
         }
-    } 
+    }
 }
 
 // unsigned char *p = (unsigned char *) &i;
@@ -45,6 +50,12 @@ void os_reset_mbt()
 
 void os_delete_partition(int id)
 {
+    // error si la id >= 128
+    if (id >= 128)
+    {
+        OS_ERROR = IdNotValid;
+    }
+    
     for (int i = 0; i < 128; i++)
     {
         if (mbt -> entries[i] -> idx_uni == id)
@@ -103,6 +114,10 @@ int get_used_space(Entry** occupied)
 
 void os_create_partition(int id, int size)
 {
+    if (size < 0){
+        OS_ERROR = PartitionCreationFailed;
+        return;
+    }
     int aux = 0;
     int aux2 = 0;
     int id_nuevo;
@@ -112,7 +127,7 @@ void os_create_partition(int id, int size)
         {
             if(mbt -> entries[i] -> valid == 1)
             {
-                printf("NO SE PUEDE CREAR LA PARTICION %i\n", id); 
+                OS_ERROR = PartitionCreationFailed;
                 aux = 1;               
             }
             
@@ -171,7 +186,10 @@ void os_create_partition(int id, int size)
 }
 
 void os_ls(){
-
+    if (mounted == 0)
+    {
+        OS_ERROR = DiskNotMounted;
+    }
     printf("\nArchivos en particion %i:\n", current_partition);
     for (int i = 0; i < 64; i++)
     {   
@@ -190,6 +208,10 @@ void os_ls(){
 
 int os_exists(char* filename)
 {
+    if (mounted == 0)
+    {
+        OS_ERROR = DiskNotMounted;
+    }
     // printf("buscando: %s\n", filename);
     for (int i = 0; i < 64; i++)
     {   
@@ -282,6 +304,11 @@ void populate_mbt(char *filename)
 
 void os_mount(char *diskname, int partition)
 {
+    if (partition > 127)
+    {
+        OS_ERROR = PartitionNotValid;
+    }
+    
     if (auxi == 1)
     {
         if (strcmp(current_disk, diskname) != 0)
@@ -290,6 +317,7 @@ void os_mount(char *diskname, int partition)
             mbt_destroy(mbt);
         }
         direc_destroy(direc);
+        mounted = 1;
     }
     
     
@@ -385,6 +413,7 @@ void os_mount(char *diskname, int partition)
 }
 
 void os_bitmap(unsigned num){
+    // error si num > bloques bitmap n_bloques_bitmap
     
     unsigned int direc_id;
     unsigned int n_blocks;
@@ -400,6 +429,11 @@ void os_bitmap(unsigned num){
     double div = (n_blocks + 0.0)/16384;
     // printf("%f\n", div);
     int n_bloques_bitmap = ceil(div);
+    if (num > n_bloques_bitmap)
+    {
+        OS_ERROR = NotEnoughBitmap;
+    }
+    
     // printf("n blo %d\n", n_bloques_bitmap);
     FILE *drive = fopen(current_disk, "rb");
     unsigned char reader;

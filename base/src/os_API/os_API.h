@@ -6,6 +6,7 @@
 #include "index_block.h"
 #include "mbt.h"
 #include "osFile.h"
+#include "error.h"
 
 extern char* current_disk;
 extern int current_partition;

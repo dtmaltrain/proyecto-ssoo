@@ -13,7 +13,8 @@ osFILE *os_open(char* filename, char mode)
       .disco = fopen(filename, "w")};
       return archivo;
       } else {
-        printf("No se puede abrir archivo %s en modo escritura, dado que ya existe\n", filename);
+        OS_ERROR = FileAlreadyExists;
+        return 0;
       }
 
     }
@@ -22,13 +23,7 @@ osFILE *os_open(char* filename, char mode)
       .disco = fopen(filename, "rb")};
       return archivo;
     }
-    // else if{
-    //   printf("error\n");}
-};
-
-// int os_write(osFILE* osfile, void* buffer, int n_bytes){
-
-// }
+}
 
 void osfile_destroy(osFILE *osfile)
 {

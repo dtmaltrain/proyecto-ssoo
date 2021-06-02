@@ -64,17 +64,17 @@ void mbt_destroy(MBT *mbt)
   free(mbt);
 }
 
-void mbt_update_in_drive(char* filename, MBT *mbt)
-{
-FILE *f = fopen(filename, "rb+");
-for(int i = 0; i < 128; i++){
-    Entry* entry = mbt -> entries[i];
-    unsigned char reader;
-    unsigned int idx_abs = entry -> idx_abs;
-    unsigned int idx_uni = entry -> idx_uni;
+// void mbt_update_in_drive(char* filename, MBT *mbt)
+// {
+// FILE *f = fopen(filename, "rb+");
+// for(int i = 0; i < 128; i++){
+//     Entry* entry = mbt -> entries[i];
+//     unsigned char reader;
+//     unsigned int idx_abs = entry -> idx_abs;
+//     unsigned int idx_uni = entry -> idx_uni;
     
 
-}
-fclose(f);
-return;
-}
+// }
+// fclose(f);
+// return;
+// }
