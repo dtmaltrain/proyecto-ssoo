@@ -22,6 +22,7 @@ void os_mbt()
     printf("\nParticiones Validas:\n");
     for (int i = 0; i < 128; i++) // entradas
     {
+        // printf("Particion_a %i\n", mbt -> entries[i] -> idx_uni);
         if (mbt -> entries[i] -> valid == 1) // check bit validez
         {
             printf("Particion %i\n", mbt -> entries[i] -> idx_uni);
@@ -207,6 +208,16 @@ int os_exists(char* filename)
 
 int os_rm(char* filename)
 {
+    // unsigned int direc_id;
+    // for (int i = 0; i < 128; i++)
+    // {
+    //     if (mbt -> entries[i] -> idx_uni == current_partition && mbt -> entries[i] -> valid == 1)
+    //     {
+    //         direc_id = mbt -> entries[i] -> idx_abs;
+    //     }
+    // }
+    // FILE *drive = fopen(filename, "rb+"); //no se como se abre
+    // unsigned char reader;
     for (int i = 0; i < 64; i++)
     {   
         if (direc -> entries[i] -> valid == 1)
@@ -214,6 +225,25 @@ int os_rm(char* filename)
             if (strcmp(direc -> entries[i] -> file_name,  filename) == 0)
             {
                 direc -> entries[i] -> valid = 0;
+                int n_punteros = ceil((direc -> indexes[i] -> size + (0.0))/2048);
+                printf("Numero de punteros %s %d\n", direc ->entries[i]-> file_name, n_punteros);
+                for (int u = 0; u < n_punteros; u++)
+                {
+                    unsigned int pointed_abs;
+                    printf("\ncambiar el bit %u por un 0\n", direc -> indexes[i] -> pointers[u]);
+                    pointed_abs = direc -> indexes[i] -> pointers[u];
+                    
+                    int bb;
+                    bb = ceil((pointed_abs+(0.0))/16384);
+                    printf("bloque de bitmap: %d\n", bb);
+                    // fseek(drive, 1024 + 2048*direc_id + bb*2048 ,SEEK_SET);
+                    
+                    // fread(&reader, sizeof(reader), 1, drive);
+                    // printf("byte_a_borrar: %d", reader);
+                    
+                    // fwrite(const void *ptr, size_t size, size_t nmemb, drive)
+                }
+                // fclose(drive);
                 return 1;
             }
         }
@@ -284,11 +314,8 @@ void os_mount(char *diskname, int partition)
 {
     if (auxi == 1)
     {
-        if (strcmp(current_disk, diskname) != 0)
-        {
-            auxi = 2;
-            mbt_destroy(mbt);
-        }
+        
+        mbt_destroy(mbt);
         direc_destroy(direc);
     }
     
@@ -296,10 +323,8 @@ void os_mount(char *diskname, int partition)
     current_disk = diskname;
     current_partition = partition;
     
-    if (auxi != 2)
-    {
-        populate_mbt(current_disk);
-    }
+    populate_mbt(current_disk);
+    
     auxi = 1;
     
 
@@ -396,7 +421,7 @@ void os_bitmap(unsigned num){
             n_blocks = mbt -> entries[i] -> n_blocks;
         }
     }
-    printf("n bloques %i\n", n_blocks);
+    //printf("n bloques %i\n", n_blocks);
     double div = (n_blocks + 0.0)/16384;
     // printf("%f\n", div);
     int n_bloques_bitmap = ceil(div);

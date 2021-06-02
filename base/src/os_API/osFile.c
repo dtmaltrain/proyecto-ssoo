@@ -14,6 +14,7 @@ osFILE *os_open(char* filename, char mode)
       return archivo;
       } else {
         printf("No se puede abrir archivo %s en modo escritura, dado que ya existe\n", filename);
+        return 0;
       }
 
     }

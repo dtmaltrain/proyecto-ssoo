@@ -17,3 +17,5 @@ void os_mount(char* diskname, int partition);
 int os_exists(char* filename);
 void os_ls();
 void os_bitmap(unsigned num);
+int os_rm(char* filename);
+void os_mbt();

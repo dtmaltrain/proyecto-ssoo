@@ -67,13 +67,27 @@ void mbt_destroy(MBT *mbt)
 void mbt_update_in_drive(char* filename, MBT *mbt)
 {
 FILE *f = fopen(filename, "rb+");
+FILE* f2 = f;
 for(int i = 0; i < 128; i++){
-    Entry* entry = mbt -> entries[i];
-    unsigned char reader;
-    unsigned int idx_abs = entry -> idx_abs;
-    unsigned int idx_uni = entry -> idx_uni;
-    
-
+  Entry* entry = mbt -> entries[i];
+  unsigned int valid = entry -> valid;
+  unsigned int idx_abs = entry -> idx_abs;
+  unsigned int idx_uni = entry -> idx_uni;
+  unsigned int n_blocks = entry -> n_blocks;
+  unsigned int byte;
+  printf("particion_a_escribir: %i\n", idx_uni);
+  printf("valid: %i\n", valid);
+  if (valid == 1)
+  {   
+    byte = 128 - idx_uni;
+    }else{
+      byte = idx_uni;
+  }
+  printf("byte: %i\n", byte);
+  fseek(f, i*8, SEEK_SET);
+  // fwrite(&byte, sizeof(byte), 1, f2);
+  fseek(f, i*8, SEEK_SET);
+  break;
 }
 fclose(f);
 return;

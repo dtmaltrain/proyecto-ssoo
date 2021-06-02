@@ -4,7 +4,7 @@
 typedef struct indexblock {
     unsigned int size;
     unsigned int pos;
-    unsigned int* pointers[681];
+    unsigned int pointers[681];
 } IndexBlock;
 
 IndexBlock *index_init(unsigned int size, unsigned int pos);
