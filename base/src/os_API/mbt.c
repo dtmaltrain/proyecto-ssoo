@@ -5,49 +5,44 @@
 Entry *entry_init(int valid, int idx_uni, unsigned int idx_abs, unsigned int n_blocks)
 {
   Entry *entry = malloc(sizeof(Entry));
-  entry -> valid = valid;
-  entry -> idx_uni = idx_uni;
-  entry -> idx_abs = idx_abs;
-  entry -> n_blocks = n_blocks;
+  entry->valid = valid;
+  entry->idx_uni = idx_uni;
+  entry->idx_abs = idx_abs;
+  entry->n_blocks = n_blocks;
   return entry;
 }
 
 MBT *mbt_init()
 {
-    MBT *mbt = malloc(sizeof(MBT));
-    *mbt = (MBT){
-    };
-    return mbt;
+  MBT *mbt = malloc(sizeof(MBT));
+  *mbt = (MBT){};
+  return mbt;
 };
-
-
 
 void add_entry(MBT *mbt, int valid, int idx_uni, unsigned int idx_abs, unsigned int n_blocks, int pos)
 {
   Entry *ent = entry_init(valid, idx_uni, idx_abs, n_blocks);
-  mbt -> entries[pos] = ent;
+  mbt->entries[pos] = ent;
   // if (mbt -> entries[pos] -> valid == 1)
   // {
   //   printf("Se agrego la particion %i\n", mbt -> entries[pos] -> idx_uni);
   // }
-  
-  
 }
 
 void show_entry(MBT *mbt, int pos)
 {
-  if (mbt -> entries[pos] -> valid == 1)
-        {
-            printf("\n Particion con posicion %i valida:\n", pos);
-            printf("Idx_uni: %i\n", mbt -> entries[pos] -> idx_uni);
-            printf("Idx_abs: %u\n", mbt -> entries[pos] -> idx_abs);
-            printf("n_bloques: %u\n", mbt -> entries[pos] -> n_blocks);
-        }
-  else{
+  if (mbt->entries[pos]->valid == 1)
+  {
+    printf("\n Particion con posicion %i valida:\n", pos);
+    printf("Idx_uni: %i\n", mbt->entries[pos]->idx_uni);
+    printf("Idx_abs: %u\n", mbt->entries[pos]->idx_abs);
+    printf("n_bloques: %u\n", mbt->entries[pos]->n_blocks);
+  }
+  else
+  {
     printf("\n Particion con posicion %i no es valida\n", pos);
   }
 }
-
 
 void entry_destroy(Entry *entry)
 {
@@ -58,37 +53,40 @@ void mbt_destroy(MBT *mbt)
 {
   for (int i = 0; i < 128; i++)
   {
-    entry_destroy(mbt -> entries[i]);
+    entry_destroy(mbt->entries[i]);
   }
-  
+
   free(mbt);
 }
 
-void mbt_update_in_drive(char* filename, MBT *mbt)
+void mbt_update_in_drive(char *filename, MBT *mbt)
 {
-FILE *f = fopen(filename, "rb+");
-FILE* f2 = f;
-for(int i = 0; i < 128; i++){
-  Entry* entry = mbt -> entries[i];
-  unsigned int valid = entry -> valid;
-  unsigned int idx_abs = entry -> idx_abs;
-  unsigned int idx_uni = entry -> idx_uni;
-  unsigned int n_blocks = entry -> n_blocks;
-  unsigned int byte;
-  printf("particion_a_escribir: %i\n", idx_uni);
-  printf("valid: %i\n", valid);
-  if (valid == 1)
-  {   
-    byte = 128 - idx_uni;
-    }else{
+  FILE *f = fopen(filename, "rb+");
+  //FILE* f2 = f;
+  for (int i = 0; i < 128; i++)
+  {
+    Entry *entry = mbt->entries[i];
+    unsigned int valid = entry->valid;
+    //unsigned int idx_abs = entry -> idx_abs;
+    unsigned int idx_uni = entry->idx_uni;
+    //unsigned int n_blocks = entry -> n_blocks;
+    unsigned int byte;
+    printf("particion_a_escribir: %i\n", idx_uni);
+    printf("valid: %i\n", valid);
+    if (valid == 1)
+    {
+      byte = 128 - idx_uni;
+    }
+    else
+    {
       byte = idx_uni;
+    }
+    printf("byte: %i\n", byte);
+    fseek(f, i * 8, SEEK_SET);
+    // fwrite(&byte, sizeof(byte), 1, f2);
+    fseek(f, i * 8, SEEK_SET);
+    break;
   }
-  printf("byte: %i\n", byte);
-  fseek(f, i*8, SEEK_SET);
-  // fwrite(&byte, sizeof(byte), 1, f2);
-  fseek(f, i*8, SEEK_SET);
-  break;
-}
-fclose(f);
-return;
+  fclose(f);
+  return;
 }

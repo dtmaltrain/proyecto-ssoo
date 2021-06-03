@@ -4,7 +4,6 @@
 
 int main(int argc, char **argv)
 {
-  
 
   printf("Hello P1!\n");
   char *filename = argv[1];
@@ -13,7 +12,6 @@ int main(int argc, char **argv)
 
   os_mbt();
   // os_rm("nene.txt");
-  
 
   mbt_update_in_drive(filename, mbt);
 
@@ -34,12 +32,15 @@ int main(int argc, char **argv)
   //       int n_punteros = ceil((direc -> indexes[i] -> size + (0.0))/2048);
   //       // printf("Numero de punteros %s %d\n", direc ->entries[i]-> file_name, n_punteros);
   //       // printf("puntero  0 %u\n",direc -> indexes[i] -> pointers[2]);
-  //     } 
+  //     }
   // }
   //escribir directorio
   direc_destroy(direc);
-  
+
   mbt_destroy(mbt);
+
+  os_strerror(OS_ERROR);
+
   //char b = 'r';
   //osFILE* ola = os_open(filename, b);
 
