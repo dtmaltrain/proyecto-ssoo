@@ -7,11 +7,6 @@ Fernando Pérez Masri (fperezm1@uc.cl)
 
 Para acceder a cualquier entrega diríjase a su carpeta respectiva.
 
-## Decisiones de diseño:
-Se 
-
-## Supuestos
-Caca
 
 ## Anexo: Informe de códigos de Error (Bonus)
 
