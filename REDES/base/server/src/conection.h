@@ -8,6 +8,10 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include "comunication.h"
+#include <sys/time.h> //FD_SET, FD_ISSET, FD_ZERO
+
+int n_connected;
+int server_socket;
 
 //http://manpages.ubuntu.com/manpages/trusty/man7/sys_socket.h.7posix.html
 //https://pubs.opengroup.org/onlinepubs/009695399/basedefs/sys/types.h.html
@@ -24,3 +28,4 @@ typedef struct players_info
 } PlayersInfo;
 
 PlayersInfo *prepare_sockets_and_get_clients(char *IP, int port);
+PlayersInfo *add_new_clients(PlayersInfo *sockets_clients);
