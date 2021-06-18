@@ -8,7 +8,7 @@ int ready = -1;
 
 char *get_input()
 {
-  char *response = malloc(20);
+  char *response = malloc(255);
   int pos = 0;
   while (1)
   {
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
       printf("El servidor dice: %s\n", message);
       free(message);
 
-      printf("¿Qué desea hacer?\n   1)Enviar mensaje al servidor\n   2)Enviar mensaje al otro cliente\n");
+      printf("¿Qué desea hacer?\n1)Enviar mensaje al servidor\n2)Enviar mensaje al otro cliente\n");
       int option = getchar() - '0';
       getchar(); //Para capturar el "enter" que queda en el buffer de entrada stdin
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
       printf("El otro cliente dice: %s\n", message);
       free(message);
 
-      printf("¿Qué desea hacer?\n   1)Enviar mensaje al servidor\n   2)Enviar mensaje al otro cliente\n");
+      printf("¿Qué desea hacer?\n1)Enviar mensaje al servidor\n2)Enviar mensaje al otro cliente\n");
       int option = getchar() - '0';
       getchar(); //Para capturar el "enter" que queda en el buffer de entrada stdin
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
       pthread_t cthread_id;
       pthread_create(&cthread_id, NULL, new_in_lobby, NULL);
 
-      printf("Por favor elija la clase de su personaje\n   1)Cazador\n   2)Medico\n   3)Hacker\n");
+      printf("Por favor elija la clase de su personaje\n1)Cazador\n2)Medico\n3)Hacker\n");
       char option = getchar();
       getchar(); //Para capturar el "enter" que queda en el buffer de entrada stdin
 
@@ -112,8 +112,9 @@ int main(int argc, char *argv[])
       free(message);
 
       printf("Si desea comenzar la partida, por favor ingrese cualquier mensaje\n");
-      getchar(); //Para capturar el "enter" que queda en el buffer de entrada stdin
-      char *response = "Comencemos";
+      char* cualquiera = get_input();
+      char* response = "Comencemos";
+      free(cualquiera);
 
       client_send_message(server_socket, 4, response);
       ready = 1;
@@ -126,7 +127,61 @@ int main(int argc, char *argv[])
       free(message);
     }
 
-    printf("ESTO ES MAIN CLIENT\n");
+    if (msg_code == 6)
+    {
+      char *message = client_receive_payload(server_socket);
+      printf("El servidor dice: %s\n", message);
+      free(message);
+
+      printf("¿Qué monstruo desea elegir?\n1)Great JagRuz\n2)Ruzalos\n3)Ruiz\n4)Monstruo aleatorio\n");
+      // char option = getchar() - '0';
+      // getchar(); //Para capturar el "enter" que queda en el buffer de entrada stdin
+      // char p_monster[1];
+      // p_monster[0] = option;
+      char* p_monster = get_input();
+      client_send_message(server_socket, 5, p_monster);
+    }
+
+    if (msg_code == 7)
+    {
+      char *message = client_receive_payload(server_socket);
+      printf("El servidor dice: %s\n", message);
+      free(message);
+      printf("¿Qué deseas hacer?\n1)Usar Estocada\n2)Usar Corte Cruzado\n3)Usar Distraer\n4)Rendirse\n");
+      char* decition = get_input();
+      client_send_message(server_socket, 6, decition);
+    }
+
+    if (msg_code == 8)
+    {
+      char *message = client_receive_payload(server_socket);
+      printf("El servidor dice: %s\n", message);
+      free(message);
+      printf("¿Qué deseas hacer?\n1)Usar Curar\n2)Usar Destello Regenerador\n3)Usar Descarga Vital\n4)Rendirse\n");
+      char* decition = get_input();
+      client_send_message(server_socket, 6, decition);
+    }
+
+    if (msg_code == 9)
+    {
+      char *message = client_receive_payload(server_socket);
+      printf("El servidor dice: %s\n", message);
+      free(message);
+      printf("¿Qué deseas hacer?\n1)Usar Inyección SQL\n2)Usar Ataque DDOS\n3)Usar Fuerza Bruta\n4)Rendirse\n");
+      char* decition = get_input();
+      client_send_message(server_socket, 6, decition);
+    }
+
+    if (msg_code == 10)
+    {
+      char *message = client_receive_payload(server_socket);   
+      printf("¿Elige al jugador?\n%s", message);
+      free(message);
+      char* decition = get_input();
+      client_send_message(server_socket, 6, decition);
+    }
+
+  //   printf("ESTO ES MAIN CLIENT\n");
   }
 
   // Se cierra el socket

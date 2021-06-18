@@ -1,4 +1,4 @@
 FILES := $(wildcard src/*.c)
 
 program: $(FILES)
-	gcc -o server $(FILES) -I./src/ -lpthread
+	gcc -o server $(FILES) -I./src/ -lpthread -lm
