@@ -1,5 +1,6 @@
 #include "classes.h"
 #include <stdio.h>
+#include <math.h>
 
 Character *char_init()
 {
@@ -35,6 +36,8 @@ void monster_ready(Character* monster, int n){
     monster -> bleeds = 0;
     monster -> distracted = 0;
     monster -> jump = 0;
+    monster -> reprobate = 0;
+    monster -> bonus = 0;
 }
 
 void player_ready(Character* player, char* name, int p){
@@ -82,6 +85,20 @@ void heal(Character* player, int bonus){
 }
 
 void hit(Character* atk, Character* def, int dmg){
+    
+    if (atk -> reprobate > 0)
+    {
+        printf("DAÑO REDUCIDO\n");
+        dmg = ceil((dmg + 0.0)/2);
+    }
+
+    if (def -> reprobate > 0)
+    {
+        printf("DAÑO DOBLE\n");
+        dmg = 2*dmg;
+    }
+    
+
     if (atk -> bonus > 0)
     {
         dmg = max(0, def -> hp - 2 * dmg);

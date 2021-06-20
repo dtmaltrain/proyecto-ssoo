@@ -79,8 +79,8 @@ void gamestate(Character* monster){
 
 void estocada(Character *atk, Character *def){
     char action[255];
-    //hit(atk, def, 1000);
-    hit(atk, def, 1000000);
+    hit(atk, def, 1000);
+    // hit(atk, def, 1000000);
     if (def -> bleeds < 3)
     {
     def -> bleeds += 1;
@@ -128,7 +128,14 @@ void curar(Character* atk, int idx){
   }else{
     def = atk;
   }
-  heal(def, 2000);
+  if (atk -> reprobate > 0)
+  {
+    heal(def, 1000);
+  }
+  else
+  {
+    heal(def, 2000);
+  }
   
   char action[255];
   sprintf(action, "%s\n usa Curar sobre %s\n", atk->name, def-> name);
@@ -149,6 +156,13 @@ void destello(Character* atk, Character* def){
     healed = atk;
   }
   int extra = ceil((dmg + 0.0)/2);
+  if (atk -> reprobate > 0)
+  {
+    dmg = extra;
+    extra = ceil((extra + 0.0)/2);
+  }
+  
+  
   heal(healed, extra);
   char action[255];
   sprintf(action, "%s\n usa Destello Regenerador, hace %i de daño, y cura %i a %s\n", atk -> name, dmg, extra, healed -> name);
@@ -157,7 +171,7 @@ void destello(Character* atk, Character* def){
 void descarga(Character* atk, Character* def){
 
   char action[255];
-  int dmg = 2*(3000 - atk -> hp);
+  int dmg = 2*(atk -> hp_max - atk -> hp);
   hit(atk, def, dmg);
   sprintf(action, "%s\n usa Descarga Vital, y hace %i de daño", atk -> name, dmg);
   send_message_to_all(action);
@@ -257,24 +271,87 @@ void espina_venenosa(Character* atk){
 // ------------------------- HABILIDADES RUIZ
 
 void caso_de_copia(Character* atk){
+  int hab = getRandom(1, 9);
   int x = getPlayer(atk);
   Character* def = players[x];
-  char action[255];
-  sprintf(action, "Ruiz usa Caso de Copia, aplica {} a %s\n", def -> name);  
-  send_message_to_all(action);
+
+  if (hab == 1)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Estocada\n");  
+    send_message_to_all(action);
+    estocada(atk, def);
+  }
+  else if (hab == 2)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Corte Cruzado\n");  
+    send_message_to_all(action);
+    corte_cr(atk, def);
+  }
+  else if (hab == 3)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Distraer\n");  
+    send_message_to_all(action);
+    distraer(atk, def);
+  }
+  else if (hab == 4)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Curar\n");  
+    send_message_to_all(action);
+    curar(atk, -1);
+  }
+  else if (hab == 5)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Destello Regenerador\n");  
+    send_message_to_all(action);
+    destello(atk, def);
+  }
+  else if (hab == 6)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Descarga Vital\n");  
+    send_message_to_all(action);
+    descarga(atk, def);
+  }
+  else if (hab == 7)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Inyeccion SQL\n");  
+    send_message_to_all(action);
+    inyeccion(atk, -1);
+  }
+  else if (hab == 8)
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Ataque DDOS\n");  
+    send_message_to_all(action);
+    ataque_ddos(atk, def);
+  }
+  else
+  {
+    char action[255];
+    sprintf(action, "Ruiz usa Caso de Copia y copia Fuerza Bruta\n");  
+    send_message_to_all(action);
+    fuerza_bruta(atk, def);
+  }
 }
 
 void reprobatron(Character* atk){
   int x = getPlayer(atk);
   Character* def = players[x];
-  // FALTA IMPLEMENTAR ESTADO REPROBADO 
+
   char action[255];
   sprintf(action, "Ruiz usa Reprobatron-9000 y reprueba a %s\n", def -> name);  
+  def -> reprobate = 2;
   send_message_to_all(action);
 }
 
 void sudo(Character* atk){
-  // FALTA IMPLEMENTAR CAMBIO EN CONTADOR DE TURNOS
+  
   int dmg = 100 * turn_count;
   for (int i = 0; i < n_connected; i++){
     hit(atk, players[i], dmg);
@@ -652,6 +729,7 @@ int main(int argc, char *argv[])
       else
       {
         sudo(monster);
+        turn_count = 0;
       }
       
     }
@@ -670,6 +748,15 @@ int main(int argc, char *argv[])
         monster -> hp -= 500;
         monster -> bleeds --;
       }
+      for (int i = 0; i < n_connected; i++)
+      {
+        if (players[i] -> reprobate > 0)
+        {
+          players[i] -> reprobate --;
+        }
+        
+      }
+      
 
     }
   }
