@@ -38,6 +38,7 @@ void monster_ready(Character* monster, int n){
     monster -> jump = 0;
     monster -> reprobate = 0;
     monster -> bonus = 0;
+    monster -> alive = 1;
 }
 
 void player_ready(Character* player, char* name, int p){
@@ -65,6 +66,7 @@ void player_ready(Character* player, char* name, int p){
     player -> toxin = 0;
     player -> reprobate = 0;
     player -> distracted = 0;
+    player -> alive = 1;
 }
 
 int min(int x, int y)
