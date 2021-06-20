@@ -4,16 +4,20 @@ int client_receive_id(int client_socket){
   // Se obtiene solamente el ID del mensaje
   int id = 0;
   recv(client_socket, &id, 1, 0);
+  // printf("Cliente recibio id en INT %s\n", id);
+  // printf("Cliente recibio id en INT %d\n", id);
   return id;
 }
 
-char * client_receive_payload(int client_socket){
+char* client_receive_payload(int client_socket){
   // Se obtiene el largo del payload
-  int len = 0;
+  size_t len = 0;
   recv(client_socket, &len, 1, 0);
+  // printf("LARGO DEL MENSAJE %zu\n", len);
   // Se obtiene el payload
   char * payload = malloc(len);
   int received = recv(client_socket, payload, len, 0);
+  // printf("PAYLOAD RECIBIDO %s\n", payload);
   // Se retorna
   return payload;
 }

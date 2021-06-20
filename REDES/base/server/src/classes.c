@@ -18,16 +18,19 @@ void monster_ready(Character* monster, int n){
     {
         monster -> name = "Great JagRuz";
         monster -> hp = 10000;
+        monster -> hp_max = 10000;
     }
     else if (n == 2)
     {
         monster -> name = "Ruzalos";
         monster -> hp = 20000;
+        monster -> hp_max = 20000;
     }
     else
     {
         monster -> name = "Ruiz, el Gemelo Malvado..";
         monster -> hp = 25000;
+        monster -> hp_max = 25000;
     }
     monster -> bleeds = 0;
     monster -> distracted = 0;
@@ -41,14 +44,17 @@ void player_ready(Character* player, char* name, int p){
     if (p == 1)
     {
         player -> hp = 5000;
+        player -> hp_max = 5000;
     }
     else if (p == 2)
     {
         player -> hp = 3000;
+        player -> hp_max = 3000;
     }
     else
     {
         player -> hp = 2500;
+        player -> hp_max = 2500;
     }
     player -> bonus = 0;
     player -> brute = 0;
@@ -58,12 +64,32 @@ void player_ready(Character* player, char* name, int p){
     player -> distracted = 0;
 }
 
-void heal(Character* player, int bonus){
-    player -> hp += bonus;
+int min(int x, int y)
+{
+  return y ^ ((x ^ y) & -(x < y));
 }
 
-void hit(Character* monster, int dmg){
-    monster -> hp -= dmg;
+int max(int x, int y)
+{
+  return x ^ ((x ^ y) & -(x < y));
+}
+
+void heal(Character* player, int bonus){
+    
+    bonus = min(player -> hp_max, player -> hp + bonus);
+    player -> hp = bonus;
+
+}
+
+void hit(Character* atk, Character* def, int dmg){
+    if (atk -> bonus > 0)
+    {
+        dmg = max(0, def -> hp - 2 * dmg);
+        def -> hp = dmg;
+    } else {
+        dmg = max(0, def -> hp - dmg);
+        def -> hp = dmg;
+    }
 }
 
 // void m_use_ability(){

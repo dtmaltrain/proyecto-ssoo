@@ -29,6 +29,12 @@ void server_send_message(int client_socket, int pkg_id, char * message){
   char msg[1+1+payloadSize];
   msg[0] = pkg_id;
   msg[1] = payloadSize;
+  // printf("---------- server data send ---------\n");
+  // printf("client_socket    |  %d\n", client_socket);
+  // printf("pkg_id           |  %d\n", pkg_id);
+  // printf("payloadSize      |  %i\n", payloadSize);
+  // printf("message to send  |  %s\n", message);
+  // printf("--------------------------- \n");
   memcpy(&msg[2], message, payloadSize);
   // Se envía el paquete
   send(client_socket, msg, 2+payloadSize, 0);

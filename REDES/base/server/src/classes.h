@@ -16,6 +16,7 @@ typedef struct Character
     int bleeds;
     int distracted;
     int jump;
+    int hp_max;
 
 } Character;
 
@@ -27,6 +28,6 @@ void player_destroy(Character* player);
 void p_use_ability(Character* player, int n);
 void m_use_ability();
 void heal(Character* player, int bonus);
-void hit(Character* chr, int dmg);
+void hit(Character* atk, Character* chr, int dmg);
 void monster_ready(Character* monster, int n);
 void char_destroy(Character* chr);

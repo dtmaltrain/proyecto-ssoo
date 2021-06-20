@@ -18,18 +18,19 @@ int trol = 0;
 int slct_screen = -1;
 int n_ready = 0;
 int turn_count = 0;
+int win = 0;
 
 
 int getRandom(int lower, int upper)
 {
-    int num = (rand() %(upper - lower + 1)) + lower;
-    return num;
+  int num = (rand() %(upper - lower + 1)) + lower;
+  return num;
 }
 // printRandoms(lower, upper);
 
-int getPlayer(){
+int getPlayer(Character* atk){
   int x = -1;
-  if (monster -> distracted == 1)
+  if (atk -> distracted == 1)
   {
     for (int i = 0; i < n_connected; i++)
     {
@@ -40,18 +41,16 @@ int getPlayer(){
   }
   else
   {
-    int x = getRandom(0, n_connected);
+    x = getRandom(0, n_connected - 1);
   }
+  printf("\n\n la equis x %d \n\n", x);
   return x;
 }
 
 void send_message_to_all(char* message){
   for (int i = 0; i < n_connected; i++)
     {
-      if (sockets[i] != -1)
-        {
-          server_send_message(sockets[i], 5, message);
-        }
+      server_send_message(sockets[i], 5, message);
     }
 }
 
@@ -60,17 +59,28 @@ char* get_users(){
   strcpy(out, "");
   for (int i = 0; i < n_connected; i++) {
       char mid[63];
-      sprintf(mid, "%i) %s, hp: %i\n", i + 1, players[i] -> name, players[i] -> hp);
+      sprintf(mid, "%i) %s, HP: %i\n", i + 1, players[i] -> name, players[i] -> hp);
       strcat(out, mid);
   }
   return out;
+}
+
+void gamestate(Character* monster){
+  char* plyrs = get_users();
+  send_message_to_all(plyrs); 
+  free(plyrs);
+  char m_state[255];
+  printf("%s, HP: %i\n", monster -> name, monster -> hp);
+  sprintf(m_state, "%s, HP: %i\n", monster -> name, monster -> hp);
+  send_message_to_all(m_state); 
 }
 
 ////////////////////////////////////// HABILIDADES ///////////////////////////////////////////////////////////////////////////////
 
 void estocada(Character *atk, Character *def){
     char action[255];
-    hit(def, 1000);
+    //hit(atk, def, 1000);
+    hit(atk, def, 1000000);
     if (def -> bleeds < 3)
     {
     def -> bleeds += 1;
@@ -81,7 +91,7 @@ void estocada(Character *atk, Character *def){
 
 void corte_cr(Character *atk, Character *def){
     char action[255];
-    hit(monster, 3000);
+    hit(atk, def, 3000);
     sprintf(action, "%s usa Corte Cruzado \n %s tiene %i vida\n", atk->name, def-> name, def -> hp);
     send_message_to_all(action);
 }
@@ -89,9 +99,13 @@ void corte_cr(Character *atk, Character *def){
 void distraer(Character* atk, Character* def){
   char action[255];
   sprintf(action, "%s usa Distraer", atk -> name);
+  def -> distracted = 1;
+  for (int i = 0; i < n_connected; i++)
+    {
+      players[i] -> distracted = 0;
+    }
+  atk -> distracted = 1;
   send_message_to_all(action);
-  // def -> distracted = 1;
-  // players[i] -> 
 }
 
 void curar(Character* atk, int idx){
@@ -109,7 +123,6 @@ void curar(Character* atk, int idx){
     char *player_option = server_receive_payload(sockets[idx]);
     int n = player_option[0] - '0';
     printf("n:%i\n", n);
-    // printf("%s", choice); //MANDAR A socket atk
     def = players[n - 1];
     free(choice);
   }else{
@@ -125,12 +138,12 @@ void curar(Character* atk, int idx){
 void destello(Character* atk, Character* def){
 
   Character* healed;
-  int dmg = getRandom(750, 2001);
-  hit(def, dmg);
+  int dmg = getRandom(750, 2000);
+  hit(atk, def, dmg);
   // printf("daño: %i\n", dmg);
   if (atk == 0)
   {
-    int ply = getRandom(0, n_connected);
+    int ply = getRandom(0, n_connected - 1);
     healed = players[ply];
   }else{
     healed = atk;
@@ -145,22 +158,29 @@ void descarga(Character* atk, Character* def){
 
   char action[255];
   int dmg = 2*(3000 - atk -> hp);
-  hit(def, dmg);
+  hit(atk, def, dmg);
   sprintf(action, "%s\n usa Descarga Vital, y hace %i de daño", atk -> name, dmg);
   send_message_to_all(action);
 }
-void inyeccion(Character* atk){
+void inyeccion(Character* atk, int idx){
   Character* def;
   if (atk -> monster_or_player == 0)
   {
     char* choice = get_users();
-    printf("%s", choice); //MANDAR A socket atk
-    //def = players[i] i lo elige el weon
+    printf("%s\n", choice);
+    server_send_message(sockets[idx], 10, choice);
+    int option = -1;
+    while(option != 6){
+      option = server_receive_id(sockets[idx]);
+    }
+    char *player_option = server_receive_payload(sockets[idx]);
+    int n = player_option[0] - '0';
+    printf("n:%i\n", n);
+    def = players[n - 1];
     free(choice);
   }else{
     def = atk;
   }
-  // elegir jugador
   def -> bonus = 2;
   char action[255];
   sprintf(action, "%s\n usa Inyección SQL sobre %s:\n", atk -> name, def -> name);
@@ -168,7 +188,7 @@ void inyeccion(Character* atk){
 }
 void ataque_ddos(Character* atk, Character* def){
   char action[255];
-  hit(def, 1500);
+  hit(atk, def, 1500);
   sprintf(action, "%s\n usa Ataque DDOS sobre %s\n", atk -> name, def -> name);
   send_message_to_all(action);
 }
@@ -179,7 +199,7 @@ void fuerza_bruta(Character* atk, Character* def){
   atk -> brute += 1;
   if (atk -> brute == 3)
   {
-    hit(def, 10000);
+    hit(atk, def, 10000);
     atk -> brute = 0;
     char action[255];
     sprintf(action, "%s\n usa Fuerza Bruta por 3ra vez y hace 10000 de dmg", atk -> name);
@@ -189,18 +209,18 @@ void fuerza_bruta(Character* atk, Character* def){
 
 // ------------------------- HABILIDADES GREAT JAGRUZ
 
-void ruzgar(){
-  int x = getPlayer();
-  Character* def = players[x]; 
-  hit(def, 1000);
+void ruzgar(Character* atk){
+  int x = getPlayer(atk);
+  Character* def = players[x];
+  hit(atk, def, 1000);
   char action[255];
   sprintf(action, "Great JagRuz usa Ruzgar y hace 1000 de dmg a %s\n", def -> name);
   send_message_to_all(action);
 }
 
-void coletazo(){
+void coletazo(Character* atk){
   for (int i = 0; i < n_connected; i++){
-    hit(players[i], 500);
+    hit(atk, players[i], 500);
   }
   char* action = "Great JagRuz usa Coletazo y hace 500 de dmg a todos los jugadores\n";
   send_message_to_all(action);
@@ -208,20 +228,27 @@ void coletazo(){
 
 // ------------------------- HABILIDADES RUZALOS
 
-void salto(){
-  int x = getPlayer();
-  Character* def = players[x]; 
-  hit(def, 1500);
-  monster -> jump = 1;
+void salto(Character* atk){
+  int x = getPlayer(atk);
+  Character* def = players[x];
+  hit(atk, def, 1500);
+  atk -> jump = 1;
   char action[255];
   sprintf(action, "Ruzalos usa Salto y hace 1500 de dmg a %s\n", def -> name);
   send_message_to_all(action);
 }
 
-void espina_venenosa(){
-  int x = getPlayer();
+void espina_venenosa(Character* atk){
+  int x = getPlayer(atk);
   Character* def = players[x];
   //FALTA ENVENENAR Y VER SI ESTÁ YA ENVENENADO
+  if (def -> toxin > 0)
+  {
+    hit(atk, def, 500);
+  }
+  else{
+    def -> toxin = 3;
+  }
   char action[255];
   sprintf(action, "Ruzalos usa Espina Venenosa y envenena a %s\n", def -> name);  
   send_message_to_all(action);
@@ -229,16 +256,16 @@ void espina_venenosa(){
 
 // ------------------------- HABILIDADES RUIZ
 
-void caso_de_copia(){
-  int x = getPlayer();
+void caso_de_copia(Character* atk){
+  int x = getPlayer(atk);
   Character* def = players[x];
   char action[255];
   sprintf(action, "Ruiz usa Caso de Copia, aplica {} a %s\n", def -> name);  
   send_message_to_all(action);
 }
 
-void reprobatron(){
-  int x = getPlayer();
+void reprobatron(Character* atk){
+  int x = getPlayer(atk);
   Character* def = players[x];
   // FALTA IMPLEMENTAR ESTADO REPROBADO 
   char action[255];
@@ -246,11 +273,11 @@ void reprobatron(){
   send_message_to_all(action);
 }
 
-void sudo(){
+void sudo(Character* atk){
   // FALTA IMPLEMENTAR CAMBIO EN CONTADOR DE TURNOS
   int dmg = 100 * turn_count;
   for (int i = 0; i < n_connected; i++){
-    hit(players[i], dmg);
+    hit(atk, players[i], dmg);
   }  
   char action[255];
   sprintf(action, "Ruiz usa sudo rm -rf y hace {%i} de dmg a todos los jugadores\n", dmg);
@@ -280,6 +307,7 @@ void *pj_wait_choice(void *n_socket)
   server_send_message(players_info->socket_c1, 5, msje);
   return NULL;
 }
+
 void *choose_pj(void *n_socket)
 {
   printf("HOLA Thread de jugadores eligiendo clase\n");
@@ -330,6 +358,7 @@ void *wait_start(void *dummy)
   printf("HOLA Thread que espera a que el Líder confirme el inicio\n");
   int msg_code = -1;
   char *welcome = "Esperando en el lobby...";
+  
   while (1){
     server_send_message(players_info->socket_c1, 4, welcome);
     while (msg_code != 4)
@@ -345,13 +374,45 @@ void *wait_start(void *dummy)
     server_send_message(players_info->socket_c1, 5, warning);
     msg_code = -1;
   }
-
   char *response = "COMENCEMOS EL JUEGO";
   server_send_message(players_info->socket_c1, 5, response);
   start = 1;
   printf("%i\n", start);
   printf("CHAO Thread que espera a que el Líder confirme el inicio\n");
   return NULL;
+}
+
+int choose_monster(Character *monster){
+  int monster_msg_code = -1;
+  char *select_monster = "Por favor elija un monstruo";
+  server_send_message(players_info->socket_c1, 6, select_monster);
+
+  while(monster_msg_code != 5){
+    monster_msg_code = server_receive_id(players_info->socket_c1);
+  }
+  char* client_monster_message = server_receive_payload(players_info->socket_c1);
+  int monster_id = client_monster_message[0] - '0';
+  if (monster_id == 4)
+  {
+    monster_id = getRandom(0, 3);
+  }
+  printf("ID MONSTRUO: %i", monster_id);
+  monster_ready(monster, monster_id);
+  printf("El lider dice: %s\n", client_monster_message);
+  
+  char eleccion_monstruo[255];
+  sprintf(eleccion_monstruo, "Elegiste el monstruo %s\n Empieza el juego!\n", monster -> name);
+
+  for (int i = 0; i < n_connected; i++)
+  {
+    if (sockets[i] != -1)
+      {
+    server_send_message(sockets[i], 5, eleccion_monstruo);
+      }
+  }
+  printf("Monstruo AAAAAAAAAAAAAAA %s, vida %i\n", monster -> name, monster -> hp);
+  return monster_id;
+  
 }
 
 int main(int argc, char *argv[])
@@ -365,8 +426,17 @@ int main(int argc, char *argv[])
 
   printf("Hello P2!\n");
   // Se define una IP y un puerto
-  char *IP = "0.0.0.0";
-  int PORT = 8080;
+  char *IP;
+  int PORT;
+  char *flag_1 = argv[1];
+  char *flag_2 = argv[3];
+  if (strcmp(flag_1, "-i") == 0){
+    IP = argv[2];
+    PORT = atoi(argv[4]);
+  } else { 
+    IP = argv[4];
+    PORT = atoi(argv[2]);
+  }
 
   // Se crea el servidor y se obtienen los sockets de ambos clientes.
   players_info = prepare_sockets_and_get_clients(IP, PORT);
@@ -394,188 +464,213 @@ int main(int argc, char *argv[])
   pthread_cancel(thread_id);
   
   //  ---------------------------------------------------------------- ACA PARTE EL JUEGO 
-  
-  int monster_msg_code = -1;
-  char *select_monster = "Por favor elija un monstruo";
-  server_send_message(players_info->socket_c1, 6, select_monster);
-
-  while(monster_msg_code != 5){
-    monster_msg_code = server_receive_id(players_info->socket_c1);
-  }
-  char* client_monster_message = server_receive_payload(players_info->socket_c1);
-  int monster_id = client_monster_message[0] - '0';
-  printf("ID MONSTRUO: %i", monster_id);
-  monster_ready(monster, monster_id);
-  printf("El lider dice: %s\n", client_monster_message);
-  
-  char eleccion_monstruo[255];
-  sprintf(eleccion_monstruo, "Elegiste el monstruo %s\n \n Empieza el juego!", monster -> name);
   if (n_connected == 1){
     sockets[0] = players_info->socket_c1;
   }
-  for (int i = 0; i < n_connected; i++)
-  {
-    if (sockets[i] != -1)
-      {
-    server_send_message(sockets[i], 5, eleccion_monstruo);
-      }
-  }
+
+  // int monster_msg_code = -1;
+  // char *select_monster = "Por favor elija un monstruo";
+  // server_send_message(players_info->socket_c1, 6, select_monster);
+
+  // while(monster_msg_code != 5){
+  //   monster_msg_code = server_receive_id(players_info->socket_c1);
+  // }
+  // char* client_monster_message = server_receive_payload(players_info->socket_c1);
+  // int monster_id = client_monster_message[0] - '0';
+  // printf("ID MONSTRUO: %i", monster_id);
+  // monster_ready(monster, monster_id);
+  // printf("El lider dice: %s\n", client_monster_message);
   
-  printf("Monstruo AAAAAAAAAAAAAAA %s, vida %i\n", monster -> name, monster -> hp);
-  while (turn_count < 15)
+  // char eleccion_monstruo[255];
+  // sprintf(eleccion_monstruo, "Elegiste el monstruo %s\n Empieza el juego!\n", monster -> name);
+
+  // for (int i = 0; i < n_connected; i++)
+  // {
+  //   if (sockets[i] != -1)
+  //     {
+  //   server_send_message(sockets[i], 5, eleccion_monstruo);
+  //     }
+  // }
+  
+  // printf("Monstruo AAAAAAAAAAAAAAA %s, vida %i\n", monster -> name, monster -> hp);
+  while (turn_count < 111)
   {
-    for (int i = 0; i < n_connected; i++)
+    int monster_id = choose_monster(monster);
+    while (turn_count < 15)
     {
-      int option = -1;
-      char turnn[255];
-      sprintf(turnn, "\nTurno de %s\n", players[i]->name);
-      for (int u = 0; u < n_connected; u++)
+      for (int i = 0; i < n_connected; i++)
       {
-        server_send_message(sockets[u], 5, turnn);
+        gamestate(monster);
+        int option = -1;
+        char turnn[255];
+        sprintf(turnn, "\nTurno de %s\n", players[i]->name);
+        for (int u = 0; u < n_connected; u++)
+        {
+          server_send_message(sockets[u], 5, turnn);
+        }
+        char turn[255];
+        sprintf(turn, "Es tu turno");
+        if (players[i]->id_class == 1)
+        {
+          server_send_message(sockets[i], 7, turn);
+        }
+        else if (players[i]->id_class == 2)
+        {
+          server_send_message(sockets[i], 8, turn);
+        }
+        else
+        {
+          server_send_message(sockets[i], 9, turn);
+        }
+      
+        while(option != 6){
+          option = server_receive_id(sockets[i]);
+        }
+        char *player_option = server_receive_payload(sockets[i]);
+        int n = player_option[0] - '0';
+        // p_use_ability(players[i], player_option_int);
+        char action[255];
+        if (n == 4){
+          players[i] -> hp = 0;
+          }
+        if (players[i] -> id_class == 1)
+          {
+              // CAZADOR
+              if (n == 1)
+              {
+                estocada(players[i], monster);
+              }
+              else if (n == 2)
+              {
+                corte_cr(players[i], monster);
+              }
+              else
+              {
+                distraer(players[i], monster);
+              }
+              
+          }
+        else if (players[i] -> id_class == 2)
+          {
+              // MEDICO
+              if (n == 1)
+              {
+                curar(players[i], i);
+              }
+              else if (n == 2)
+              {
+                destello(players[i], monster);
+              }
+              else
+              {
+                descarga(players[i], monster);
+              }
+          }
+        else
+          {
+              //HACKER
+              if (n == 1)
+              {
+                inyeccion(players[i], i);
+              }
+              else if (n == 2)
+              {
+                ataque_ddos(players[i], monster);
+              }
+              else
+              {
+                fuerza_bruta(players[i], monster);
+              }
+          }
+        // FIN TURNO PLAYER
+        if (players[i] -> bonus > 0)
+        {
+          players[i] -> bonus --;
+        }
+
+        if (players[i] -> toxin > 0)
+        {
+          players[i] -> hp -= 400;
+          players[i] -> toxin --;
+        }
+        
+        if (players[i] -> bleeds > 0)
+        {
+          players[i] -> hp -= 500;
+          players[i] -> bleeds --;
+        }
+        if (monster -> hp == 0){
+          win = 1;
+          break;
+        }
+        // FIN DE TODOS LOS TURNOS DE PLAYERS
       }
-      char turn[255];
-      sprintf(turn, "Es tu turno");
-      printf("mi id es: %i\n", players[i]->id_class);
-      if (players[i]->id_class == 1)
+    if (win == 1){
+      win = 0;
+      char victory[255];
+      sprintf(victory, "VICTORIA, derrotaste a %s\n", monster -> name);
+      send_message_to_all(victory); 
+      break;
+    }
+    gamestate(monster);
+    int number = getRandom(1, 10);
+    if (monster_id == 1){
+      if (number <= 5)
       {
-        server_send_message(sockets[i], 7, turn);
-      }
-      else if (players[i]->id_class == 2)
-      {
-        server_send_message(sockets[i], 8, turn);
+        ruzgar(monster);
       }
       else
       {
-        server_send_message(sockets[i], 9, turn);
+        coletazo(monster);
       }
-    
-    while(option != 6){
-      option = server_receive_id(sockets[i]);
     }
-    char *player_option = server_receive_payload(sockets[i]);
-    int n = player_option[0] - '0';
-    // p_use_ability(players[i], player_option_int);
-    char action[255];
-    if (n == 4){
-      // morirse
+    else if (monster_id == 2)
+    {
+      if (monster -> jump == 1){
+        espina_venenosa(monster);
       }
-    if (players[i] -> id_class == 1)
+      else{  
+      if (number <= 4)
       {
-          // CAZADOR
-          if (n == 1)
-          {
-            estocada(players[i], monster);
-          }
-          else if (n == 2)
-          {
-            corte_cr(players[i], monster);
-          }
-          else
-          {
-            for (int j = 0; j < n_connected; i++){
-              players[j] -> distracted = 0;
-            }
-            distraer(players[i], monster);
-          }
-          
+        salto(monster);
       }
-    else if (players[i] -> id_class == 2)
+      else
       {
-          // MEDICO
-          if (n == 1)
-          {
-            curar(players[i], i);
-          }
-          else if (n == 2)
-          {
-            destello(players[i], monster);
-          }
-          else
-          {
-            descarga(players[i], monster);
-          }
+        espina_venenosa(monster);
       }
+      }
+    }
     else
+    {
+      if (number <= 4)
       {
-          //HACKER
-          if (n == 1)
-          {
-            inyeccion(players[i]);
-          }
-          else if (n == 2)
-          {
-            ataque_ddos(players[i], monster);
-          }
-          else
-          {
-            fuerza_bruta(players[i], monster);
-          }
+        caso_de_copia(monster);
       }
-  // FIN TURNO PLAYER
-  if (players[i] -> bonus > 0)
-  {
-    players[i] -> bonus --;
-  }
+      else if (number > 4 && number <=6){
+        reprobatron(monster);
+      }
+      else
+      {
+        sudo(monster);
+      }
+      
+    }
+      // FIN TURNO MONSTER
+      turn_count ++;
+      if (monster -> jump > 0)
+      {
+        monster -> jump = 0;
+      }
+      if (monster -> distracted > 0)
+      {
+        monster -> distracted = 0;
+      }
+      if (monster -> bleeds > 0)
+      {
+        monster -> hp -= 500;
+        monster -> bleeds --;
+      }
 
-  if (players[i] -> toxin > 0)
-  {
-    players[i] -> toxin --;
-  }
-  
-  if (players[i] -> bleeds > 0)
-  {
-    players[i] -> bleeds --;
-  }
-  // FIN DE TODOS LOS TURNOS DE PLAYERS
-  }
-  int number = getRandom(1, 11);
-  printf("number: %i\n", number);
-  if (monster_id == 1){
-    if (number <= 5)
-    {
-      ruzgar();
-    }
-    else
-    {
-      coletazo();
-    }
-  }
-  else if (monster_id == 2)
-  {
-    if (monster -> jump == 1){
-      espina_venenosa();
-    }
-    else{
-    if (number <= 4)
-    {
-      salto();
-    }
-    else
-    {
-      espina_venenosa();
-    }
-    }
-  }
-  else
-  {
-    if (number <= 4)
-    {
-      caso_de_copia();
-    }
-    else if (number > 4 && number <=6){
-      reprobatron();
-    }
-    else
-    {
-      sudo();
-    }
-    
-  }
-    // FIN TURNO MONSTER
-    turn_count ++;
-    if (monster -> jump > 0)
-    {
-      monster -> jump = 0;
     }
   }
 
