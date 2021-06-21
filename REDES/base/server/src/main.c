@@ -88,7 +88,6 @@ void estocada(Character *atk, Character *def)
 {
   char action[255];
   hit(atk, def, 1000);
-  // hit(atk, def, 1000000);
   if (def->bleeds < 3)
   {
     def->bleeds += 1;
@@ -137,6 +136,7 @@ void curar(Character *atk, int idx)
     printf("n:%i\n", n);
     def = players[n - 1];
     free(choice);
+    free(player_option);
   }
   else
   {
@@ -211,6 +211,7 @@ void inyeccion(Character *atk, int idx)
     printf("n:%i\n", n);
     def = players[n - 1];
     free(choice);
+    free(player_option);
   }
   else
   {
@@ -415,6 +416,7 @@ void *pj_wait_choice(void *n_socket)
   char msje[strlen(response)];
   sprintf(msje, "Nuevo jugador en el lobby:\n  Nombre: %s, Clase: %i\n  Estado Lobby: %i/4", players[index]->name, players[index]->id_class, n_connected);
   server_send_message(players_info->socket_c1, 5, msje);
+  free(client_message);
   return NULL;
 }
 
@@ -453,7 +455,6 @@ void *wait_players_thread(void *caca)
     sockets[1] = players_info->socket_c2;
     sockets[2] = players_info->socket_c3;
     sockets[3] = players_info->socket_c4;
-    // printf("Se Conectó un weon \n");
   }
   //printf("CHAO Thread 1\n");
   return NULL;
@@ -472,6 +473,7 @@ void *wait_start(void *dummy)
     {
       msg_code = server_receive_id(players_info->socket_c1);
       char *client_message = server_receive_payload(players_info->socket_c1);
+      free(client_message);
     }
     if (n_connected == n_ready)
     {
@@ -503,6 +505,7 @@ int choose_monster(Character *monster)
   {
     monster_id = getRandom(0, 3);
   }
+  free(client_monster_message);
   //printf("ID MONSTRUO: %i", monster_id);
   monster_ready(monster, monster_id);
   //printf("El lider dice: %s\n", client_monster_message);
@@ -577,34 +580,47 @@ int main(int argc, char *argv[])
   {
     sockets[0] = players_info->socket_c1;
   }
-  //int segunda_vez = 0;
+  int segunda_vez = 0;
   while (1)
   {
-    // if (segunda_vez == 1)
-    // {
-    //   int desconectados[4] = {-1, -1, -1, -1};
-    //   for (int i = 0; i < n_connected; i++)
-    //   {
-    //     char keep[255];
-    //     sprintf(keep, "%s ¿Deseas seguir jugando?", players[i]->name);
-    //     server_send_message(sockets[i], 11, keep);
-    //     int option_playing = -1;
-    //     while (option_playing != 6)
-    //     {
-    //       option_playing = server_receive_id(sockets[i]);
-    //     }
-    //     char *keep_playing = server_receive_payload(sockets[i]);
-    //     int keeping = keep_playing[0] - '0';
-    //     if (keeping == 1)
-    //     {
-    //       printf("SIGUE JUGANDO\n");
-    //     }
-    //   }
-    // }
-    // else
-    // {
-    //   segunda_vez = 1;
-    // }
+    if (segunda_vez == 1)
+    {
+      char keep[255];
+      sprintf(keep, "%s ¿Desean seguir jugando?", players[0]->name);
+      server_send_message(sockets[0], 11, keep);
+      int option_playing = -1;
+      while (option_playing != 6)
+      {
+        option_playing = server_receive_id(sockets[0]);
+      }
+      char *keep_playing = server_receive_payload(sockets[0]);
+      int keeping = keep_playing[0] - '0';
+      if (keeping == 1)
+      {
+        printf("SIGUE JUGANDO\n");
+        turn_count = 0;
+        for (int i = 0; i < n_connected; i++)
+        {
+          player_ready(players[i], players[i]->name, players[i]->id_class);
+        }
+        // player ready -> hacer
+      }
+      else
+      {
+        char adios[255];
+        sprintf(adios, "Serás desconectado del servidor, ¡Gracias por jugar!");
+        for (int i = 0; i < n_connected; i++)
+        {
+          server_send_message(sockets[i], 12, adios);
+        }
+        break;
+      }
+      free(keep_playing);
+    }
+    else
+    {
+      segunda_vez = 1;
+    }
     int monster_id = choose_monster(monster);
     while (turn_count < 99999)
     {
@@ -642,7 +658,7 @@ int main(int argc, char *argv[])
           }
           char *player_option = server_receive_payload(sockets[i]);
           int n = player_option[0] - '0';
-          // p_use_ability(players[i], player_option_int);
+          free(player_option);
           char action[255];
           if (players[i]->id_class == 1)
           {
@@ -765,6 +781,7 @@ int main(int argc, char *argv[])
             sprintf(dead, "%s ha muerto o se ha rendido\n", players[i]->name);
             send_message_to_all(dead);
           }
+          free(player_option);
           // FIN DE TODOS LOS TURNOS DE PLAYERS
         }
         else if (players[i]->alive == 0)
@@ -890,5 +907,12 @@ int main(int argc, char *argv[])
       }
     }
   }
+  free(client_message);
+  for (int i = 0; i < 4; i++)
+  {
+    char_destroy(players[i]);
+  }
+  char_destroy(monster);
+  free(players_info);
   return 0;
 }

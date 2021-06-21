@@ -31,7 +31,7 @@ void *new_in_lobby(void *dummy)
     {
       char *message = client_receive_payload(server_socket);
       printf("El servidor dice: %s\n", message);
-      //free(message);
+      free(message);
     }
   }
   return NULL;
@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
   {
 
     int msg_code = client_receive_id(server_socket);
-    while (msg_code >= 12)
+    while (msg_code >= 13)
     {
       int msg_code = client_receive_id(server_socket);
     }
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     { //Recibimos un mensaje del servidor
       char *message = client_receive_payload(server_socket);
       printf("El servidor dice: %s\n", message);
-      //free(message);
+      free(message);
 
       printf("¿Qué desea hacer?\n1)Enviar mensaje al servidor\n2)Enviar mensaje al otro cliente\n");
       int option = getchar() - '0';
@@ -82,14 +82,14 @@ int main(int argc, char *argv[])
       char *response = get_input();
 
       client_send_message(server_socket, option, response);
-      //free(response);
+      free(response);
     }
 
     if (msg_code == 2)
     { //Recibimos un mensaje que proviene del otro cliente
       char *message = client_receive_payload(server_socket);
       printf("El otro cliente dice: %s\n", message);
-      //free(message);
+      free(message);
 
       printf("¿Qué desea hacer?\n1)Enviar mensaje al servidor\n2)Enviar mensaje al otro cliente\n");
       int option = getchar() - '0';
@@ -99,14 +99,14 @@ int main(int argc, char *argv[])
       char *response = get_input();
 
       client_send_message(server_socket, option, response);
-      //free(response);
+      free(response);
     }
 
     if (msg_code == 3)
     {
       char *message = client_receive_payload(server_socket);
       printf("%s\n", message);
-      //free(message);
+      free(message);
 
       // pthread_t cthread_id;
       // pthread_create(&cthread_id, NULL, new_in_lobby, NULL);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
     {
       char *message = client_receive_payload(server_socket);
       printf("%s\n", message);
-      //free(message);
+      free(message);
       printf("\n --------------------------------- \n");
       printf("Si desea comenzar la partida, por favor ingrese cualquier mensaje\n");
       char *cualquiera = get_input();
@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
       // p_monster[0] = option;
       char *p_monster = get_input();
       client_send_message(server_socket, 5, p_monster);
+      free(p_monster);
       printf("\n --------------------------------- \n");
     }
 
@@ -175,6 +176,7 @@ int main(int argc, char *argv[])
       printf("¿Qué deseas hacer?\n1)Usar Estocada\n2)Usar Corte Cruzado\n3)Usar Distraer\n4)Rendirse\n");
       char *decition = get_input();
       client_send_message(server_socket, 6, decition);
+      free(decition);
       printf("\n --------------------------------- \n");
     }
 
@@ -187,6 +189,7 @@ int main(int argc, char *argv[])
       printf("¿Qué deseas hacer?\n1)Usar Curar\n2)Usar Destello Regenerador\n3)Usar Descarga Vital\n4)Rendirse\n");
       char *decition = get_input();
       client_send_message(server_socket, 6, decition);
+      free(decition);
       printf("\n --------------------------------- \n");
     }
 
@@ -200,6 +203,7 @@ int main(int argc, char *argv[])
       printf("\n --------------------------------- \n");
       char *decition = get_input();
       client_send_message(server_socket, 6, decition);
+      free(decition);
     }
 
     if (msg_code == 10)
@@ -211,7 +215,7 @@ int main(int argc, char *argv[])
       free(message);
       char *decition = get_input();
       client_send_message(server_socket, 6, decition);
-      // free(decition);
+      free(decition);
     }
 
     if (msg_code == 11)
@@ -223,15 +227,23 @@ int main(int argc, char *argv[])
       free(message);
       char *decition = get_input();
       client_send_message(server_socket, 6, decition);
-      // free(decition);
+      free(decition);
     }
 
+    if (msg_code == 12)
+    {
+      char *message = client_receive_payload(server_socket);
+      printf("%s\n", message);
+      free(message);
+      exit(0);
+    }
     //   printf("ESTO ES MAIN CLIENT\n");
   }
 
   // Se cierra el socket
   close(server_socket);
   free(IP);
-
+  free(flag_1);
+  free(flag_2);
   return 0;
 }
